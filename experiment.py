@@ -16,31 +16,79 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
 def load_data(limit=None):
-    X, y = [[]], []
+    X, y = [[]], [[]]
     with codecs.open("data/sinninghe-tagged.tsv", encoding="utf-8") as infile:
         for i, line in enumerate(infile):
             if limit is not None and i >= limit:
                 break
             if line.startswith("<FB/>"):
                 X.append([])
+                y.append([])
             else:
                 fields = line.strip().split('\t')
                 X[-1].append([field if field else None for field in fields[:-2]])
-                y.append(fields[-2])
+                assert X[-1]
+                y[-1].append(fields[-2])
     return X, y
+
+def find_quotes(document, max_quote_length=50):
+    "Extract the quote ranges from a document."
+    in_quote = False
+    quotes = []
+    for i, token in enumerate(document):
+        if token[0] == '"':
+            if in_quote:
+                quotes[-1] = (quotes[-1], i)
+                in_quote = False
+            elif in_quote and abs(i - quotes[-1]) > max_quote_length:
+                in_quote = False
+                quotes = quotes[:-1]
+            else:
+                quotes.append(i)
+                in_quote = True
+    return [quote for quote in quotes if isinstance(quote, tuple)]
+
+def add_speakers(document):
+    speakers = []
+    for start, end in find_quotes(document):
+        print ' '.join(w[0] for w in document[max(start-10, 0):min(end+10, len(document))])
+        print ' '.join(w[0] for w in document[start:end+1])
+        left_indices = range(start-1, -1, -1)
+        right_indices = range(end+1, len(document))
+        found_speaker = False
+        for indices in (left_indices, right_indices):
+            for i in indices:
+                if (document[i][0] in '?!."' or (document[i-1][0] in '?."!' and i-1 >= 0) or
+                    i < 0 or i >= len(document)):
+                    break
+                if document[i][4] in ('su', 'hd') or document[i][3] == 'name':
+                    speakers.append(i)
+                    found_speaker = True
+                    break
+            if found_speaker:
+                break
+        if found_speaker:
+            print document[speakers[-1]][0]
+        else:
+            print 'No speaker found...'
+
+    return [word + [0 if i not in speakers else 1] for i, word in enumerate(document)]
+
 
 class Windower(BaseEstimator):
 
     def __init__(self, window_size=5):
         self.window_size = window_size
+        self.fitted = False
+        self.vectorizer = DictVectorizer(sparse=True)
 
     def fit(self, documents, y=None):
         return self
 
-    def transform(self, documents):
-        X = []
+    def transform(self, documents, labels):
+        X, y = [], []
         n_fields = len(documents[0][0])
-        for document in documents:
+        for d, document in enumerate(documents):
             for i, word in enumerate(document):
                 features = []
                 for j in range(i - self.window_size, i):
@@ -49,19 +97,66 @@ class Windower(BaseEstimator):
                 for j in range(i + 1, i + self.window_size):
                     features.extend([None] * n_fields if j >= len(document) else document[j])
                 X.append({str(k): f for k, f in enumerate(features) if f != None})
-        return DictVectorizer(sparse=True).fit_transform(X)
+                y.append(labels[d][i])
+        transform = (self.vectorizer.fit_transform if not self.fitted else
+                     self.vectorizer.transform)
+        self.fitted = True
+        return transform(X), y
+
+
+class FeatureStacker(BaseEstimator):
+    """Stacks several transformer objects to yield concatenated features.
+    Similar to pipeline, a list of tuples ``(name, estimator)`` is passed
+    to the constructor.
+    """
+    def __init__(self, transformer_list):
+        self.transformer_list = transformer_list
+
+    def get_feature_names(self):
+        pass
+
+    def fit(self, X, y=None):
+        for name, trans in self.transformer_list:
+            trans.fit(X, y)
+        return self
+
+    def transform(self, X):
+        features = []
+        for name, trans in self.transformer_list:
+            features.append(trans.transform(X))
+        issparse = [sparse.issparse(f) for f in features]
+        if np.any(issparse):
+            features = sparse.hstack(features).tocsr()
+        else:
+            features = np.hstack(features)
+        return features
+
+    def get_params(self, deep=True):
+        if not deep:
+            return super(FeatureStacker, self).get_params(deep=False)
+        else:
+            out = dict(self.transformer_list)
+            for name, trans in self.transformer_list:
+                for key, value in trans.get_params(deep=True).iteritems():
+                    out['%s__%s' % (name, key)] = value
+            return out
 
 
 # read the data and extract all features
 X, y = load_data(limit=None)
-y = np.array(y)
-le = LabelEncoder()
-y_bak, y = y, le.fit_transform(y)
+#X = map(add_speakers, X)
 # split the data into a train and test set
-for window in (1, 2, 5, 10):
+for window in (1, 2):
     windower = Windower(window)
-    X_ = windower.transform(X)
-    X_train, X_test, y_train, y_test = train_test_split(X_, y, test_size=0.2, random_state=1)
+    X_train, X_test, y_train, y_test = train_test_split(
+        range(len(X)), range(len(X)), test_size=0.2, random_state=1)
+    X_train, y_train = [X[i] for i in X_train], [y[i] for i in y_train]
+    X_test, y_test = [X[i] for i in X_test], [y[i] for i in y_test]
+    X_train, y_train = windower.transform(X_train, y_train)
+    X_test, y_test = windower.transform(X_test, y_test)
+    le = LabelEncoder()
+    y_train = le.fit_transform(y_train)
+    y_test = le.transform(y_test)
     # initialize a classifier
     clf = SGDClassifier()
     # experiment with a feature_selection filter
