@@ -145,7 +145,7 @@ X, y = load_data(limit=None)
 # X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
 # split the data into a train and test set
 
-for selector_name, selector in (chi2, partial(f_regression, center=False)):
+for selector_name, selector in (("chi2", chi2), ("anova", partial(f_regression, center=False))):
     for window in (1, 2, 3, 4, 5, 10):
         windower = Windower(window)
         X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
