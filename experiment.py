@@ -48,20 +48,17 @@ def find_quotes(document, max_quote_length=50):
                 in_quote = True
     return [quote for quote in quotes if isinstance(quote, tuple)]
 
-def add_speakers(document):
+def add_speakers(document, labels):
     speakers = []
     for start, end in find_quotes(document):
-        print ' '.join(w[0] for w in document[max(start-10, 0):min(end+10, len(document))])
-        print ' '.join(w[0] for w in document[start:end+1])
         left_indices = range(start-1, -1, -1)
         right_indices = range(end+1, len(document))
         found_speaker = False
         for indices in (left_indices, right_indices):
             for i in indices:
-                if (document[i][0] in '?!."' or (document[i-1][0] in '?."!' and i-1 >= 0) or
-                    i < 0 or i >= len(document)):
+                if document[i][0] in '?!."':
                     break
-                if document[i][4] in ('su', 'hd') or document[i][3] == 'name':
+                if document[i][4] == 'su':
                     speakers.append(i)
                     found_speaker = True
                     break
@@ -144,55 +141,69 @@ class FeatureStacker(BaseEstimator):
 
 # read the data and extract all features
 X, y = load_data(limit=None)
-#X = map(add_speakers, X)
+# X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
 # split the data into a train and test set
-for window in (1, 2):
-    windower = Windower(window)
-    X_train, X_test, y_train, y_test = train_test_split(
-        range(len(X)), range(len(X)), test_size=0.2, random_state=1)
-    X_train, y_train = [X[i] for i in X_train], [y[i] for i in y_train]
-    X_test, y_test = [X[i] for i in X_test], [y[i] for i in y_test]
-    X_train, y_train = windower.transform(X_train, y_train)
-    X_test, y_test = windower.transform(X_test, y_test)
-    le = LabelEncoder()
-    y_train = le.fit_transform(y_train)
-    y_test = le.transform(y_test)
-    # initialize a classifier
-    clf = SGDClassifier()
-    # experiment with a feature_selection filter
-    anova_filter = SelectPercentile(partial(f_regression, center=False))
-    percentiles = (1, 3, 6, 10, 15, 20, 30, 40, 60, 80, 100)
-    # construct the pipeline
-    pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
-    # these are the parameters we're gonna test for in the grid search
-    parameters = {'clf__class_weight': (None, 'auto'),
-                  'clf__alpha': (0.01, 0.001, 0.0001, 0.00001),
-                  'clf__n_iter': (20, 50, 100),
-                  'clf__penalty': ('l2', 'elasticnet'),
-                  'anova__percentile': percentiles}
 
-    grid_search = GridSearchCV(pipeline, param_grid=parameters, n_jobs=8, scoring='f1', verbose=1)
-    print "Performing grid search..."
-    print "pipeline:", [name for name, _ in pipeline.steps]
-    print "parameters:"
-    pprint(parameters)
-    grid_search.fit(X_train, y_train)
+for f_selector in (chi2, partial(f_regression, center=False)):
+    for window in (1, 2, 3, 4, 5, 10):
+        windower = Windower(window)
+        X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
+            range(len(X)), range(len(X)), test_size=0.2, random_state=1)
+        X_train, y_train = [X[i] for i in X_train_idx], [y[i] for i in y_train_idx]
+        X_test, y_test = [X[i] for i in X_test_idx], [y[i] for i in y_test_idx]
+        X_train, y_train = windower.transform(X_train, y_train)
+        X_test, y_test = windower.transform(X_test, y_test)
+        le = LabelEncoder()
+        y_train = le.fit_transform(y_train)
+        y_test = le.transform(y_test)
+        # initialize a classifier
+        clf = SGDClassifier()
+        # experiment with a feature_selection filter
+        anova_filter = SelectPercentile()
+        percentiles = (1, 3, 6, 10, 15, 20, 30, 40, 60, 80, 100)
+        # construct the pipeline
+        pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
+        # these are the parameters we're gonna test for in the grid search
+        parameters = {'clf__class_weight': (None, 'auto'),
+                      'clf__alpha': (0.01, 0.001, 0.0001, 0.00001),
+                      'clf__n_iter': (20, 50, 100),
+                      'clf__penalty': ('l2', 'elasticnet'),
+                      'anova__percentile': percentiles}
+        grid_search = GridSearchCV(
+            pipeline, param_grid=parameters, n_jobs=12, scoring='f1', verbose=1)
+        print "Performing grid search..."
+        print "pipeline:", [name for name, _ in pipeline.steps]
+        print "Window:", window
+        print "Feauture Selection", f_selector.__name__
+        print "parameters:"
+        pprint(parameters)
+        grid_search.fit(X_train, y_train)
 
-    print "Best score: %0.3f" % grid_search.best_score_
-    print "Best parameters set:"
-    best_parameters = grid_search.best_estimator_.get_params()
-    for param_name in sorted(parameters.keys()):
-        print "\t%s: %r" % (param_name, best_parameters[param_name])
+        print "Best score: %0.3f" % grid_search.best_score_
+        print "Best parameters set:"
+        best_parameters = grid_search.best_estimator_.get_params()
+        for param_name in sorted(parameters.keys()):
+            print "\t%s: %r" % (param_name, best_parameters[param_name])
 
-    print
-    preds = grid_search.predict(X_test)
-    print "Classification report after grid search:"
-    print classification_report(y_test, preds)
-    print
+        print
+        preds = grid_search.predict(X_test)
+        print "Classification report after grid search:"
+        print classification_report(y_test, preds)
+        print
 
-    print "Fitting a majority vote DummyClassifier"
-    dummy_clf = DummyClassifier(strategy='constant', constant=1)
-    dummy_clf.fit(X_train, y_train)
-    preds = dummy_clf.predict(X_test)
-    print "Classification report for Dummy Classifier:"
-    print classification_report(y_test, preds)
+        print "Fitting a majority vote DummyClassifier"
+        dummy_clf = DummyClassifier(strategy='constant', constant=1)
+        dummy_clf.fit(X_train, y_train)
+        preds = dummy_clf.predict(X_test)
+        print "Classification report for Dummy Classifier:"
+        print classification_report(y_test, preds)
+
+        print 'Fitting `subject=animate` classifier:'
+        preds = [1 if w[4].startswith('su') else 0 for i in X_test_idx for w in X[i]]
+        print "Classification report for `subject=animate` classifier:"
+        print classification_report(y_test, preds)
+
+        print 'Fitting `subject/object=animate` classifier:'
+        preds = [1 if w[4].startswith(('su', 'obj')) else 0 for i in X_test_idx for w in X[i]]
+        print "Classification report for `subject=animate` classifier:"
+        print classification_report(y_test, preds)
