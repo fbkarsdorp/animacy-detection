@@ -145,7 +145,8 @@ X, y = load_data(limit=None)
 # X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
 # split the data into a train and test set
 
-for selector_name, selector in (("chi2", chi2), ("anova", partial(f_regression, center=False))):
+for selector_name, selector in (
+        ("chi2", chi2), ("anova", partial(f_regression, center=False))):
     for window in (1, 2, 3, 4, 5, 10):
         windower = Windower(window)
         X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
@@ -165,11 +166,12 @@ for selector_name, selector in (("chi2", chi2), ("anova", partial(f_regression, 
         # construct the pipeline
         pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
         # these are the parameters we're gonna test for in the grid search
-        parameters = {'clf__class_weight': (None, 'auto'),
-                      'clf__alpha': 10.0**-np.arange(1,7),
-                      'clf__n_iter': (20, 50, 100),
-                      'clf__penalty': ('l2', 'elasticnet'),
-                      'anova__percentile': percentiles}
+        parameters = {
+            'clf__class_weight': (None, 'auto'),
+            'clf__alpha': 10.0**-np.arange(1,7),
+            'clf__n_iter': (20, 50, 100, 200, np.ceil(10**6. / len(X_train))),
+            'clf__penalty': ('l2', 'elasticnet'),
+            'anova__percentile': percentiles}
         grid_search = GridSearchCV(
             pipeline, param_grid=parameters, n_jobs=12, scoring='f1', verbose=1)
         print "Performing grid search..."
