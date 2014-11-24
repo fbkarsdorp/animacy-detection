@@ -8,7 +8,8 @@ from sklearn.base import BaseEstimator
 from sklearn.cross_validation import train_test_split
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_selection import SelectPercentile, f_regression, chi2
+from sklearn.feature_selection import SelectPercentile
+from sklearn.feature_selection import f_regression, chi2, f_classif
 from sklearn.grid_search import GridSearchCV
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report
@@ -146,7 +147,9 @@ X, y = load_data(limit=None)
 # split the data into a train and test set
 
 for selector_name, selector in (
-        ("chi2", chi2), ("anova", partial(f_regression, center=False))):
+        ("chi2", chi2),
+        ("f1-anova", f_classif),
+        ("regression-anova", partial(f_regression, center=False))):
     for window in (1, 2, 3, 4, 5, 10):
         windower = Windower(window)
         X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
