@@ -15,6 +15,7 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
+
 def load_data(limit=None):
     X, y = [[]], [[]]
     with codecs.open("data/sinninghe-tagged.tsv", encoding="utf-8") as infile:
@@ -145,7 +146,7 @@ X, y = load_data(limit=None)
 # split the data into a train and test set
 
 for selector_name, selector in (chi2, partial(f_regression, center=False)):
-    for window in (1, 2):#, 3, 4, 5, 10):
+    for window in (1, 2, 3, 4, 5, 10):
         windower = Windower(window)
         X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
             range(len(X)), range(len(X)), test_size=0.2, random_state=1)
@@ -157,7 +158,7 @@ for selector_name, selector in (chi2, partial(f_regression, center=False)):
         y_train = le.fit_transform(y_train)
         y_test = le.transform(y_test)
         # initialize a classifier
-        clf = SGDClassifier()
+        clf = SGDClassifier(shuffle=True)
         # experiment with a feature_selection filter
         anova_filter = SelectPercentile(selector)
         percentiles = (1, 3, 6, 10, 15, 20, 30, 40, 60, 80, 100)
@@ -165,7 +166,7 @@ for selector_name, selector in (chi2, partial(f_regression, center=False)):
         pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
         # these are the parameters we're gonna test for in the grid search
         parameters = {'clf__class_weight': (None, 'auto'),
-                      'clf__alpha': (0.01, 0.001, 0.0001, 0.00001),
+                      'clf__alpha': 10.0**-np.arange(1,7),
                       'clf__n_iter': (20, 50, 100),
                       'clf__penalty': ('l2', 'elasticnet'),
                       'anova__percentile': percentiles}
