@@ -144,8 +144,8 @@ X, y = load_data(limit=None)
 # X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
 # split the data into a train and test set
 
-for f_selector in (chi2, partial(f_regression, center=False)):
-    for window in (1, 2, 3, 4, 5, 10):
+for selector_name, selector in (chi2, partial(f_regression, center=False)):
+    for window in (1, 2):#, 3, 4, 5, 10):
         windower = Windower(window)
         X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
             range(len(X)), range(len(X)), test_size=0.2, random_state=1)
@@ -159,7 +159,7 @@ for f_selector in (chi2, partial(f_regression, center=False)):
         # initialize a classifier
         clf = SGDClassifier()
         # experiment with a feature_selection filter
-        anova_filter = SelectPercentile()
+        anova_filter = SelectPercentile(selector)
         percentiles = (1, 3, 6, 10, 15, 20, 30, 40, 60, 80, 100)
         # construct the pipeline
         pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
@@ -174,7 +174,7 @@ for f_selector in (chi2, partial(f_regression, center=False)):
         print "Performing grid search..."
         print "pipeline:", [name for name, _ in pipeline.steps]
         print "Window:", window
-        print "Feauture Selection", f_selector.__name__
+        print "Feauture Selection", selector_name
         print "parameters:"
         pprint(parameters)
         grid_search.fit(X_train, y_train)
@@ -190,6 +190,16 @@ for f_selector in (chi2, partial(f_regression, center=False)):
         print "Classification report after grid search:"
         print classification_report(y_test, preds)
         print
+
+        print "Classification report on nouns after grid search:"
+        noun_preds = []
+        i = 0
+        for idx in X_test_idx:
+            for j, w in enumerate(X[idx]):
+                if w[3] in ('noun', 'name'):
+                    noun_preds.append(i + j)
+            i += len(X[idx])
+        print classification_report(preds[noun_preds], y_test[noun_preds])
 
         print "Fitting a majority vote DummyClassifier"
         dummy_clf = DummyClassifier(strategy='constant', constant=1)
