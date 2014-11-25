@@ -8,7 +8,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                     level=logging.INFO)
 
 class CowReader(object):
-    root = '/vol/bigdata/corpora/COW/''
+    root = '/vol/bigdata/corpora/COW/'
     dirs = ['nlcow14ax01', 'nlcow14ax02', 'nlcow14ax03', 'nlcow14ax04',
             'nlcow14ax05', 'nlcow14ax06', 'nlcow14ax07']
 
