@@ -1,7 +1,11 @@
 import codecs
+import logging
 import os
 
 from gensim.models.doc2vec import Doc2Vec, LabeledSentence
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                    level=logging.INFO)
 
 class CowReader(object):
     root = '/vol/bigdata/corpora'
@@ -24,6 +28,6 @@ class CowReader(object):
                         word, pos, lemma = line.strip().split('\t')
                         if pos not in ('$.', 'punc'):
                             sentence.append(word.lower())
-
-model = Doc2Vec(CowReader(), workers=15)
+sentences = CowReader()
+model = Doc2Vec(sentences, workers=15)
 model.save("/vol/tensusers/fkarsdorp/cow.w2v")
