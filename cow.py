@@ -5,8 +5,8 @@ import re
 
 from gensim.models.doc2vec import Doc2Vec, LabeledSentence
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.INFO)
+#logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+#                    level=logging.INFO)
 
 class CowReader(object):
     root = '/vol/bigdata/corpora/COW/'
@@ -28,6 +28,7 @@ class CowReader(object):
                     else:
                         word, pos, lemma = line.strip().split('\t')
                         if pos not in ('$.', 'punc'):
+                            print word
                             sentence.append(word.lower())
 sentences = CowReader()
 model = Doc2Vec(sentences, workers=15)
