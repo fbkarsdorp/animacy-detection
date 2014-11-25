@@ -16,6 +16,10 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
+from gensim.models.word2vec import Word2Vec
+
+
+
 
 def load_data(limit=None):
     X, y = [[]], [[]]
@@ -72,6 +76,16 @@ def add_speakers(document, labels):
             print 'No speaker found...'
 
     return [word + [0 if i not in speakers else 1] for i, word in enumerate(document)]
+
+# class SKWord2Vec(BaseEstimator):
+#     def __init__(self):
+#         pass
+
+#     def fit(self, X, y=None):
+#         self.model =
+#         return self
+
+#     def transform(self, X):
 
 
 class Windower(BaseEstimator):
@@ -172,7 +186,7 @@ for selector_name, selector in (
         parameters = {
             'clf__class_weight': (None, 'auto'),
             'clf__alpha': 10.0**-np.arange(1,7),
-            'clf__n_iter': (20, 50, 100, 200, np.ceil(10**6. / len(X_train))),
+            'clf__n_iter': (20, 50, 100, 200, np.ceil(10**6. / X_train.shape[0])),
             'clf__penalty': ('l2', 'elasticnet'),
             'anova__percentile': percentiles}
         grid_search = GridSearchCV(
