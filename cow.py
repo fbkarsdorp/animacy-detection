@@ -20,7 +20,7 @@ class CowReader(object):
                 sentence, sentence_id = [], None
                 for line in infile:
                     if line.startswith('<s'):
-                        sentence_id =re.search('docid="(.*?)"', line).group(0)
+                        sentence_id =re.search('docid="(.*?)"', line).group(1)
                     elif line.startswith('</s>'):
                         yield LabeledSentence(sentence, sentence_id)
                         sentence = []
