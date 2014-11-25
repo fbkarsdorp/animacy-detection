@@ -1,6 +1,7 @@
 import codecs
 import logging
 import os
+import re
 
 from gensim.models.doc2vec import Doc2Vec, LabeledSentence
 
