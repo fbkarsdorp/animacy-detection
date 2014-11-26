@@ -31,5 +31,5 @@ class CowReader(object):
                             sentence.append(word.lower())
 
 sentences = CowReader()
-model = Word2Vec(sentences, size=300, window=10, min_count=10, workers=4)
+model = Word2Vec(sentences, size=300, window=10, min_count=10, workers=15)
 model.save("/vol/tensusers/fkarsdorp/cow.w2v")
