@@ -3,10 +3,10 @@ import logging
 import os
 import re
 
-from gensim.models.doc2vec import Doc2Vec, LabeledSentence
+from gensim.models.word2vec import Word2Vec
 
-#logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-#                    level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                    level=logging.INFO)
 
 class CowReader(object):
     root = '/vol/bigdata/corpora/COW/'
@@ -16,20 +16,20 @@ class CowReader(object):
     def __iter__(self):
         for directory in CowReader.dirs:
             with codecs.open(
-                    os.path.join(CowReader.root, directory, directory + ".xml"),
+                    os.path.join(CowReader.root, directory, "cow.txt"),
                     encoding='utf-8') as infile:
                 sentence, sentence_id = [], None
                 for line in infile:
                     if line.startswith('<s'):
                         sentence_id =re.search('docid="(.*?)"', line).group(1)
                     elif line.startswith('</s>'):
-                        yield LabeledSentence(sentence, sentence_id)
+                        yield sentence
                         sentence = []
                     else:
                         word, pos, lemma = line.strip().split('\t')
                         if pos not in ('$.', 'punc'):
-                            print word
                             sentence.append(word.lower())
+
 sentences = CowReader()
-model = Doc2Vec(sentences, workers=15)
+model = Word2Vec(sentences, size=300, window=10, min_count=10, workers=4)
 model.save("/vol/tensusers/fkarsdorp/cow.w2v")
