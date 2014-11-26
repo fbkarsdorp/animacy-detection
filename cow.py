@@ -16,7 +16,7 @@ class CowReader(object):
     def __iter__(self):
         for directory in CowReader.dirs:
             with codecs.open(
-                    os.path.join(CowReader.root, directory, "cow.txt"),
+                    os.path.join(CowReader.root, directory, directory + ".xml"),
                     encoding='utf-8') as infile:
                 sentence, sentence_id = [], None
                 for line in infile:
