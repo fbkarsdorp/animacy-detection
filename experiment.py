@@ -166,7 +166,7 @@ y_train = [label for i in y_train_idx for label in y[i]]
 X_test = [X[i] for i in X_test_idx]
 y_test = [label for i in y_test_idx for label in y[i]]
 # load the desired word2vec model
-model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+model = Word2Vec.load(sys.argv[1])
 # setup a feature stacker
 stacker = FeatureStacker(('windower', Windower(window_size=3)),
                          ('embeddings', WordEmbeddings(model)))
