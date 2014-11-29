@@ -2,6 +2,7 @@ import codecs
 import sys
 
 import numpy as np
+import scipy.sparse as sp
 
 from sklearn.base import BaseEstimator
 from sklearn.cross_validation import train_test_split
@@ -11,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
+from gensim.models.word2vec import Word2Vec
 
 def load_data(limit=None):
     X, y = [[]], [[]]
@@ -130,12 +132,16 @@ class FeatureStacker(BaseEstimator):
         features = []
         for name, trans in self.transformer_list:
             features.append(trans.transform(X))
-        issparse = [sparse.issparse(f) for f in features]
+        issparse = [sp.issparse(f) for f in features]
         if np.any(issparse):
-            features = sparse.hstack(features).tocsr()
+            features = sp.hstack(features).tocsr()
         else:
             features = np.hstack(features)
         return features
+
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)
 
     def get_params(self, deep=True):
         if not deep:
@@ -159,10 +165,13 @@ X_train = [X[i] for i in X_train_idx]
 y_train = [label for i in y_train_idx for label in y[i]]
 X_test = [X[i] for i in X_test_idx]
 y_test = [label for i in y_test_idx for label in y[i]]
+# load the desired word2vec model
+model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
 # setup a feature stacker
-stacker = FeatureStacker(Windower(window_size=3), WordEmbeddings(model))
-X_train = stacker.fit_transform(X_train, y_train)
-X_test = stacker.transform(X_test, y_test)
+stacker = FeatureStacker(('windower', Windower(window_size=3)),
+                         ('embeddings', WordEmbeddings(model)))
+X_train = stacker.fit_transform(X_train)
+X_test = stacker.transform(X_test)
 le = LabelEncoder()
 y_train = le.fit_transform(y_train)
 y_test = le.transform(y_test)
