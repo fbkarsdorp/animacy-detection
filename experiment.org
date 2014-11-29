@@ -1,0 +1,31 @@
+#+TITLE: Experiment config for animacy detection
+#+AUTHOR: Folgert Karsdorp
+#+DATE: 2014-11-29
+
+* Experimentation for animacy detection in Dutch Folktales
+
+The idea of this experiment is to develop a system that is capable of tagging
+a text for animate entities. We constructed a data set of Dutch Folktales where
+all tokens have been annotated as being an animate entity or not. To extend this
+data set, we want to develop Machine Learning tools that can automatically
+annotated new, unseen documents for animacy.
+
+** TODO Add word2vec features to existing model                     :animacy:
+We need to come up with an efficient way to add the learned word embeddings to
+the existing features. One way would be to simply stack them. However, it is
+not clear how to deal with unseen words in the word2vec model. Another point of
+concern is how to make sure that the original features are scaled to those of
+word2vec or vice versa.
+
+** TODO Experiment with two-stage classifier                        :animacy:
+Another way to make use of the word2vec features would be to learn a two-stage
+classifier consisting of the following two steps (in either order):
+1. train a classifier based on the word2vec features and predict for each
+   word in the test set whether it is animate or not.
+2. Add the predictions to the features in the original (window-based) model;
+
+** TODO Experiment with shallow features                            :animacy:
+In the original setting we make use of quite hard to obtain features based on
+syntactic processing of texts. It would be interesting to see whether we could
+achieve similar results without those heavy cost features. Since word2vec's skip
+gram model is supposed to cover some syntax, this would be a cheap replacement.

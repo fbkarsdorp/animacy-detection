@@ -1,6 +1,5 @@
 import codecs
-from functools import partial
-from pprint import pprint
+import sys
 
 import numpy as np
 
@@ -8,12 +7,8 @@ from sklearn.base import BaseEstimator
 from sklearn.cross_validation import train_test_split
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_selection import SelectPercentile
-from sklearn.feature_selection import f_regression, chi2, f_classif
-from sklearn.grid_search import GridSearchCV
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -81,26 +76,38 @@ class Windower(BaseEstimator):
         self.fitted = False
         self.vectorizer = DictVectorizer(sparse=True)
 
-    def fit(self, documents, y=None):
+    def fit(self, X, y=None):
         return self
 
-    def transform(self, documents, labels):
-        X, y = [], []
-        n_fields = len(documents[0][0])
-        for d, document in enumerate(documents):
-            for i, word in enumerate(document):
+    def transform(self, X):
+        X_ = []
+        n_fields = len(X[0][0])
+        for d, doc in enumerate(X):
+            for i, word in enumerate(doc):
                 features = []
                 for j in range(i - self.window_size, i):
-                    features.extend([None] * n_fields if j < 0 else document[j])
+                    features.extend([None] * n_fields if j < 0 else doc[j])
                 features.extend(word)
                 for j in range(i + 1, i + self.window_size):
-                    features.extend([None] * n_fields if j >= len(document) else document[j])
-                X.append({str(k): f for k, f in enumerate(features) if f != None})
-                y.append(labels[d][i])
+                    features.extend([None] * n_fields if j >= len(doc) else doc[j])
+                X_.append({str(k): f for k, f in enumerate(features) if f != None})
         transform = (self.vectorizer.fit_transform if not self.fitted else
                      self.vectorizer.transform)
         self.fitted = True
-        return transform(X), y
+        return transform(X_)
+
+
+class WordEmbeddings(BaseEstimator):
+    def __init__(self, model):
+        self.model = model
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        # x is a document, word[0] is the word token
+        return np.vstack([self.model[word[0]] if word[0] in self.model else
+                          np.zeros(model.layer1_size) for x in X for word in x])
 
 
 class FeatureStacker(BaseEstimator):
@@ -108,7 +115,7 @@ class FeatureStacker(BaseEstimator):
     Similar to pipeline, a list of tuples ``(name, estimator)`` is passed
     to the constructor.
     """
-    def __init__(self, transformer_list):
+    def __init__(self, *transformer_list):
         self.transformer_list = transformer_list
 
     def get_feature_names(self):
@@ -144,82 +151,50 @@ class FeatureStacker(BaseEstimator):
 # read the data and extract all features
 X, y = load_data(limit=None)
 # X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
-# split the data into a train and test set
+# split the data into a train and test set (this is based on documents, not words!)
+X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
+    range(len(X)), range(len(X)), test_size=0.2, random_state=1)
+# get the actual data by flattening the documents
+X_train = [X[i] for i in X_train_idx]
+y_train = [label for i in y_train_idx for label in y[i]]
+X_test = [X[i] for i in X_test_idx]
+y_test = [label for i in y_test_idx for label in y[i]]
+# setup a feature stacker
+stacker = FeatureStacker(Windower(window_size=3), WordEmbeddings(model))
+X_train = stacker.fit_transform(X_train, y_train)
+X_test = stacker.transform(X_test, y_test)
+le = LabelEncoder()
+y_train = le.fit_transform(y_train)
+y_test = le.transform(y_test)
+# initialize a classifier
+clf = LogisticRegression(C=1.0)
+clf.fit(X_train, y_train)
+preds = clf.predict(X_test)
+print "Classification report for all features."
+print classification_report(y_test, preds)
+print "Classification report on nouns after grid search:"
+noun_preds = []
+i = 0
+for idx in X_test_idx:
+    for j, w in enumerate(X[idx]):
+        if w[3] in ('noun', 'name'):
+            noun_preds.append(i + j)
+    i += len(X[idx])
+print classification_report(preds[noun_preds], y_test[noun_preds])
 
-for selector_name, selector in (
-        ("chi2", chi2),
-        ("f1-anova", f_classif),
-        ("regression-anova", partial(f_regression, center=False))):
-    for window in (1, 2, 3, 4, 5, 10):
-        windower = Windower(window)
-        X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
-            range(len(X)), range(len(X)), test_size=0.2, random_state=1)
-        X_train, y_train = [X[i] for i in X_train_idx], [y[i] for i in y_train_idx]
-        X_test, y_test = [X[i] for i in X_test_idx], [y[i] for i in y_test_idx]
-        X_train, y_train = windower.transform(X_train, y_train)
-        X_test, y_test = windower.transform(X_test, y_test)
-        le = LabelEncoder()
-        y_train = le.fit_transform(y_train)
-        y_test = le.transform(y_test)
-        # initialize a classifier
-        clf = SGDClassifier(shuffle=True)
-        # experiment with a feature_selection filter
-        anova_filter = SelectPercentile(selector)
-        percentiles = (1, 3, 6, 10, 15, 20, 30, 40, 60, 80, 100)
-        # construct the pipeline
-        pipeline = Pipeline([('anova', anova_filter), ('clf', clf)])
-        # these are the parameters we're gonna test for in the grid search
-        parameters = {
-            'clf__class_weight': (None, 'auto'),
-            'clf__alpha': 10.0**-np.arange(1,7),
-            'clf__n_iter': (20, 50, 100, 200, np.ceil(10**6. / X_train.shape[0])),
-            'clf__penalty': ('l2', 'elasticnet'),
-            'anova__percentile': percentiles}
-        grid_search = GridSearchCV(
-            pipeline, param_grid=parameters, n_jobs=12, scoring='f1', verbose=1)
-        print "Performing grid search..."
-        print "pipeline:", [name for name, _ in pipeline.steps]
-        print "Window:", window
-        print "Feauture Selection", selector_name
-        print "parameters:"
-        pprint(parameters)
-        grid_search.fit(X_train, y_train)
+print "Fitting a majority vote DummyClassifier"
+dummy_clf = DummyClassifier(strategy='constant', constant=1)
+dummy_clf.fit(X_train, y_train)
+preds = dummy_clf.predict(X_test)
+print "Classification report for Dummy Classifier:"
+print classification_report(y_test, preds)
 
-        print "Best score: %0.3f" % grid_search.best_score_
-        print "Best parameters set:"
-        best_parameters = grid_search.best_estimator_.get_params()
-        for param_name in sorted(parameters.keys()):
-            print "\t%s: %r" % (param_name, best_parameters[param_name])
+print 'Fitting `subject=animate` classifier:'
+preds = [1 if w[4].startswith('su') else 0 for i in X_test_idx for w in X[i]]
+print "Classification report for `subject=animate` classifier:"
+print classification_report(y_test, preds)
 
-        print
-        preds = grid_search.predict(X_test)
-        print "Classification report after grid search:"
-        print classification_report(y_test, preds)
-        print
-
-        print "Classification report on nouns after grid search:"
-        noun_preds = []
-        i = 0
-        for idx in X_test_idx:
-            for j, w in enumerate(X[idx]):
-                if w[3] in ('noun', 'name'):
-                    noun_preds.append(i + j)
-            i += len(X[idx])
-        print classification_report(preds[noun_preds], y_test[noun_preds])
-
-        print "Fitting a majority vote DummyClassifier"
-        dummy_clf = DummyClassifier(strategy='constant', constant=1)
-        dummy_clf.fit(X_train, y_train)
-        preds = dummy_clf.predict(X_test)
-        print "Classification report for Dummy Classifier:"
-        print classification_report(y_test, preds)
-
-        print 'Fitting `subject=animate` classifier:'
-        preds = [1 if w[4].startswith('su') else 0 for i in X_test_idx for w in X[i]]
-        print "Classification report for `subject=animate` classifier:"
-        print classification_report(y_test, preds)
-
-        print 'Fitting `subject/object=animate` classifier:'
-        preds = [1 if w[4].startswith(('su', 'obj')) else 0 for i in X_test_idx for w in X[i]]
-        print "Classification report for `subject=animate` classifier:"
-        print classification_report(y_test, preds)
+print 'Fitting `subject/object=animate` classifier:'
+preds = [1 if w[4].startswith(('su', 'obj')) else 0 for i in X_test_idx for w in X[i]]
+print "Classification report for `subject=animate` classifier:"
+print classification_report(y_test, preds)
