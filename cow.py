@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
                     level=logging.INFO)
 
 class CowReader(object):
-    root = '/vol/bigdata/corpora/COW/'
+    root = '/vol/bigdata/corpora/COW/NLCOW'
     dirs = ['nlcow14ax01', 'nlcow14ax02', 'nlcow14ax03', 'nlcow14ax04',
             'nlcow14ax05', 'nlcow14ax06', 'nlcow14ax07']
 
@@ -31,5 +31,5 @@ class CowReader(object):
                             sentence.append(word.lower())
 
 sentences = CowReader()
-model = Word2Vec(sentences, size=300, window=10, min_count=10, workers=15)
+model = Word2Vec(sentences, size=300, window=10, min_count=10, workers=20)
 model.save("/vol/tensusers/fkarsdorp/cow.w2v")
