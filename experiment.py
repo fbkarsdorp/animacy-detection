@@ -16,10 +16,6 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 
-from gensim.models.word2vec import Word2Vec
-
-
-
 
 def load_data(limit=None):
     X, y = [[]], [[]]
@@ -76,16 +72,6 @@ def add_speakers(document, labels):
             print 'No speaker found...'
 
     return [word + [0 if i not in speakers else 1] for i, word in enumerate(document)]
-
-# class SKWord2Vec(BaseEstimator):
-#     def __init__(self):
-#         pass
-
-#     def fit(self, X, y=None):
-#         self.model =
-#         return self
-
-#     def transform(self, X):
 
 
 class Windower(BaseEstimator):

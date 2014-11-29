@@ -18,10 +18,10 @@ class CowReader(object):
             with codecs.open(
                     os.path.join(CowReader.root, directory, directory + ".xml"),
                     encoding='utf-8') as infile:
-                sentence, sentence_id = [], None
+                sentence = []
                 for line in infile:
                     if line.startswith('<s'):
-                        sentence_id =re.search('docid="(.*?)"', line).group(1)
+                        continue
                     elif line.startswith('</s>'):
                         yield sentence
                         sentence = []
