@@ -40,7 +40,8 @@ model = Word2Vec.load(sys.argv[1])
 
 X_train, y_train = zip(*filter_words(X_train, y_train, model))
 X_test, y_test = zip(*filter_words(X_test, y_test, model))
-X_train, X_test = np.vstack(X_train), np.vstack(X_test)
+X_train = np.vstack([model[w] for w in X_train])
+X_test = np.vstack([model[w] for w in X_test])
 
 clf = LogisticRegression()
 clf.fit(X_train, y_train)
