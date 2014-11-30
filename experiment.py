@@ -14,6 +14,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
 
+
 def load_data(limit=None):
     X, y = [[]], [[]]
     with codecs.open("data/sinninghe-tagged.tsv", encoding="utf-8") as infile:
@@ -98,6 +99,10 @@ class Windower(BaseEstimator):
         self.fitted = True
         return transform(X_)
 
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)
+
 
 class WordEmbeddings(BaseEstimator):
     def __init__(self, model):
@@ -110,6 +115,10 @@ class WordEmbeddings(BaseEstimator):
         # x is a document, word[0] is the word token
         return np.vstack([self.model[word[0]] if word[0] in self.model else
                           np.zeros(model.layer1_size) for x in X for word in x])
+
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)
 
 
 class FeatureStacker(BaseEstimator):
@@ -153,57 +162,72 @@ class FeatureStacker(BaseEstimator):
                     out['%s__%s' % (name, key)] = value
             return out
 
+FIELDNAMES = ['word', 'root', 'lcat', 'pos','rel', 'sense', 'frame',
+              'special','noun_det', 'noun_countable', 'noun_number',
+              'verb_auxiliary', 'verb_tense', 'verb_complements','animate',
+              'reference']
+
+def include_features(X, features):
+    header = {w: i for i, w in enumerate(FIELDNAMES)}
+    excluded = map(header.get, features)
+    return [[[field for i, field in enumerate(word) if i in excluded]
+             for word in doc] for doc in X]
 
 # read the data and extract all features
 X, y = load_data(limit=None)
-# X = [add_speakers(x, y_) for x, y_ in zip(X, y)]
 # split the data into a train and test set (this is based on documents, not words!)
 X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
     range(len(X)), range(len(X)), test_size=0.2, random_state=1)
 # get the actual data by flattening the documents
-X_train = [X[i] for i in X_train_idx]
-y_train = [label for i in y_train_idx for label in y[i]]
-X_test = [X[i] for i in X_test_idx]
-y_test = [label for i in y_test_idx for label in y[i]]
+X_train_docs = [X[i] for i in X_train_idx]
+y_train_docs = [label for i in y_train_idx for label in y[i]]
+X_test_docs = [X[i] for i in X_test_idx]
+y_test_docs = [label for i in y_test_idx for label in y[i]]
 # load the desired word2vec model
-model = Word2Vec.load(sys.argv[1])
-# setup a feature stacker
-stacker = FeatureStacker(('windower', Windower(window_size=3)),
-                         ('embeddings', WordEmbeddings(model)))
-X_train = stacker.fit_transform(X_train)
-X_test = stacker.transform(X_test)
-le = LabelEncoder()
-y_train = le.fit_transform(y_train)
-y_test = le.transform(y_test)
-# initialize a classifier
-clf = LogisticRegression(C=1.0)
-clf.fit(X_train, y_train)
-preds = clf.predict(X_test)
-print "Classification report for all features."
-print classification_report(y_test, preds)
-print "Classification report on nouns after grid search:"
-noun_preds = []
-i = 0
-for idx in X_test_idx:
-    for j, w in enumerate(X[idx]):
-        if w[3] in ('noun', 'name'):
-            noun_preds.append(i + j)
-    i += len(X[idx])
-print classification_report(preds[noun_preds], y_test[noun_preds])
+model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
 
-print "Fitting a majority vote DummyClassifier"
-dummy_clf = DummyClassifier(strategy='constant', constant=1)
-dummy_clf.fit(X_train, y_train)
-preds = dummy_clf.predict(X_test)
-print "Classification report for Dummy Classifier:"
-print classification_report(y_test, preds)
+# set up a number of experimental settings
+experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'lemma'),
+               ('word', 'pos', 'lemma', 'rel'), tuple(FIELDNAMES)]
+experiments = experiments + [experiment + ('embeddings', )
+                             for experiment in experiments]
+experiments += [('embeddings', )]
 
-print 'Fitting `subject=animate` classifier:'
-preds = [1 if w[4].startswith('su') else 0 for i in X_test_idx for w in X[i]]
-print "Classification report for `subject=animate` classifier:"
-print classification_report(y_test, preds)
+for experiment in experiments:
+    print "Features: %s" % ', '.join(experiment)
+    if 'embeddings' in experiment and len(experiment) > 1:
+        features = FeatureStacker(('windower', Windower(window_size=3)),
+                                  ('embeddings', WordEmbeddings(model)))
+    elif 'embeddings' in experiment:
+        features = WordEmbeddings(model)
+        experiment = ('word', ) + experiment # needed to extract the vectors
+    else:
+        features = Windower(window_size=3)
+    X_train = include_features(X_train_docs, experiment)
+    X_test = include_features(X_test_docs, experiment)
+    X_train = features.fit_transform(X_train)
+    X_test = features.transform(X_test)
+    le = LabelEncoder()
+    y_train = le.fit_transform(y_train_docs)
+    y_test = le.transform(y_test_docs)
+    # initialize a classifier
+    clf = LogisticRegression(C=1.0)
+    clf.fit(X_train, y_train)
+    preds = clf.predict(X_test)
+    print classification_report(y_test, preds)
+    print "Classification report on nouns:"
+    noun_preds = []
+    i = 0
+    for idx in X_test_idx:
+        for j, w in enumerate(X[idx]):
+            if w[3] in ('noun', 'name'):
+                noun_preds.append(i + j)
+        i += len(X[idx])
+    print classification_report(preds[noun_preds], y_test[noun_preds])
 
-print 'Fitting `subject/object=animate` classifier:'
-preds = [1 if w[4].startswith(('su', 'obj')) else 0 for i in X_test_idx for w in X[i]]
-print "Classification report for `subject=animate` classifier:"
-print classification_report(y_test, preds)
+    print "Fitting a majority vote DummyClassifier"
+    dummy_clf = DummyClassifier(strategy='constant', constant=1)
+    dummy_clf.fit(X_train, y_train)
+    preds = dummy_clf.predict(X_test)
+    print "Classification report for Dummy Classifier:"
+    print classification_report(y_test, preds)
