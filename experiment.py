@@ -184,7 +184,7 @@ y_train_docs = [label for i in y_train_idx for label in y[i]]
 X_test_docs = [X[i] for i in X_test_idx]
 y_test_docs = [label for i in y_test_idx for label in y[i]]
 # load the desired word2vec model
-model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+model = Word2Vec.load(sys.argv[1])
 
 # set up a number of experimental settings
 experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'lemma'),
