@@ -1,0 +1,90 @@
+\documentclass[a4paper, twocolumn, 11pt]{article}
+
+\usepackage{graphicx, covington, times, booktabs, multirow, color, colortbl}
+\definecolor{Gray}{gray}{0.9}
+\usepackage[utf8]{inputenc}
+\author{Folgert Karsdorp\\\texttt{fbkarsdorp@fastmail.com}}
+\title{Animacy Detection in Folktales}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\section{Description of the Data}
+
+\section{Experimental Setup}
+
+\section{Results}
+\begin{table*}
+\centering
+\begin{tabular}{llrrrr}
+\toprule
+features                                                 &           & precision & recall & $F1$ \\ \midrule
+\multirow{2}{*}{word}                                    & animate   & 0.93      & 0.80   & 0.86 \\
+                                                         & inanimate & 0.96      & 0.99   & 0.98 \\
+\multirow{2}{*}{word + PoS}                              & animate   & 0.92      & 0.88   & 0.90 \\
+                                                         & inanimate & 0.98      & 0.99   & 0.98 \\
+\multirow{2}{*}{word + PoS + lemma}                      & animate   & 0.92      & 0.88   & 0.90 \\
+                                                         & inanimate & 0.98      & 0.99   & 0.98 \\
+\multirow{2}{*}{word + PoS + lemma + dep}                & animate   & 0.93      & 0.88   & 0.90 \\
+                                                         & inanimate & 0.98      & 0.99   & 0.98 \\
+\multirow{2}{*}{word + embeddings}                       & animate   & 0.93      & 0.89   & 0.91 \\
+                                                         & inanimate & 0.98      & 0.99   & 0.98 \\
+\rowcolor{Gray}                                          & animate   & 0.93      & 0.93   & 0.93 \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & inanimate & 0.99      & 0.99   & 0.99 \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}         & animate   & 0.93      & 0.93   & 0.93 \\
+                                                         & inanimate & 0.99      & 0.99   & 0.99 \\
+\multirow{2}{*}{word + PoS + lemma + dep + embeddings}   & animate   & 0.92      & 0.93   & 0.93 \\
+                                                         & inanimate & 0.99      & 0.99   & 0.99 \\
+\multirow{2}{*}{embeddings}                              & animate   & 0.90      & 0.76   & 0.83 \\
+                                                         & inanimate & 0.96      & 0.98   & 0.97 \\
+
+\bottomrule
+\end{tabular}
+\caption{Precision, recall and $F1$ scores for animate and inanimate classes per feature settings for all words.}
+\label{tab:results-all}
+\end{table*}
+
+\begin{table*}
+\centering
+\begin{tabular}{llrrrr}
+\toprule
+features                                               &           & precision & recall & $F1$ \\ \midrule
+\multirow{2}{*}{word}                                  & animate   & 0.64      & 0.96   & 0.77 \\
+                                                       & inanimate & 0.98      & 0.81   & 0.89 \\
+\multirow{2}{*}{word + PoS}                            & animate   & 0.80      & 0.92   & 0.86 \\
+                                                       & inanimate & 0.95      & 0.89   & 0.92 \\
+\multirow{2}{*}{word + PoS + lemma}                    & animate   & 0.80      & 0.92   & 0.86 \\
+                                                       & inanimate & 0.95      & 0.89   & 0.92 \\
+\multirow{2}{*}{word + PoS + lemma + dep}              & animate   & 0.80      & 0.93   & 0.86 \\
+                                                       & inanimate & 0.96      & 0.88   & 0.92 \\
+\multirow{2}{*}{word + embeddings}                     & animate   & 0.83      & 0.93   & 0.88 \\
+                                                       & inanimate & 0.96      & 0.90   & 0.93 \\
+\rowcolor{Gray}                                        & animate   & 0.92      & 0.92   & 0.92 \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & inanimate & 0.95    & 0.95   & 0.95 \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}       & animate   & 0.92      & 0.92   & 0.92 \\
+                                                       & inanimate & 0.95      & 0.95   & 0.95 \\
+\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & animate   & 0.91      & 0.92   & 0.92 \\
+                                                       & inanimate & 0.95      & 0.95   & 0.95 \\
+\multirow{2}{*}{embeddings}                            & animate   & 0.66      & 0.88   & 0.75 \\
+                                                       & inanimate & 0.94      & 0.81   & 0.87 \\
+
+\bottomrule
+\end{tabular}
+\caption{Precision, recall and $F1$ scores for animate and inanimate classes per feature settings for all words tagged
+as noun.}
+\label{tab:results-noun}
+\end{table*}
+\section{Concluding Remarks}
+
+\section*{Acknowledgments}
+
+\bibliographystyle{plainnat}
+\bibliography{paper}
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
