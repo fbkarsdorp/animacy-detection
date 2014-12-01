@@ -18,13 +18,13 @@ concern is how to make sure that the original features are scaled to those of
 word2vec or vice versa.
 
 Experiment with a number of feature permutations:
-1. only words in window of three
-2. words and pos-tags
-3. words, lemmas and pos-tags
-4. words, lemmas, pos-tags and dependency tags
-5. all syntactic features
-6. setting 1 to 5 with word embeddings
-7. only word embeddings
+- only words in window of three
+- words and pos-tags
+- words, lemmas and pos-tags
+- words, lemmas, pos-tags and dependency tags
+- all syntactic features
+- setting 1 to 5 with word embeddings
+- only word embeddings
 
 ** TODO Experiment with two-stage classifier                        :animacy:
 Another way to make use of the word2vec features would be to learn a two-stage
