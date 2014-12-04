@@ -187,6 +187,7 @@ X_test_docs = [X[i] for i in X_test_idx]
 y_test_docs = [label for i in y_test_idx for label in y[i]]
 # load the desired word2vec model
 model = Word2Vec.load(sys.argv[1])
+model.init_sims(replace=True)
 
 # set up a number of experimental settings
 experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
