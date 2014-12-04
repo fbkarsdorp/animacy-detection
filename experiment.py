@@ -231,7 +231,7 @@ for experiment in experiments:
             if w[3] in ('noun', 'name'):
                 noun_preds.append(i + j)
         i += len(X[idx])
-    print classification_report(preds[noun_preds], y_test[noun_preds])
+    print classification_report(y_test[noun_preds], preds[noun_preds])
 
     print "Fitting a majority vote DummyClassifier"
     dummy_clf = DummyClassifier(strategy='constant', constant=1)
