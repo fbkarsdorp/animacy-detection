@@ -199,7 +199,7 @@ classifiers = {
     'lr': LogisticRegression(C=1.0),
     'sgd': SGDClassifier(n_iter=100, shuffle=True),
     'svm': LinearSVC(),
-    'knn': KNeighborsClassifier(weights='distance', metric='cosine')
+    'knn': KNeighborsClassifier(algorithm='brute', weights='distance', metric='cosine')
 }
 
 for experiment in experiments:
