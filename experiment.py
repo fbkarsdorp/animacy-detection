@@ -17,7 +17,7 @@ from gensim.models.word2vec import Word2Vec
 
 def load_data(limit=None):
     X, y = [[]], [[]]
-    with codecs.open("data/sinninghe-tagged.tsv", encoding="utf-8") as infile:
+    with codecs.open(sys.argv[2], encoding="utf-8") as infile:
         for i, line in enumerate(infile):
             if limit is not None and i >= limit:
                 break
