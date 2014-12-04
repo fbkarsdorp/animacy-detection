@@ -187,8 +187,8 @@ y_test_docs = [label for i in y_test_idx for label in y[i]]
 model = Word2Vec.load(sys.argv[1])
 
 # set up a number of experimental settings
-experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'lemma'),
-               ('word', 'pos', 'lemma', 'rel'), tuple(FIELDNAMES)]
+experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
+               ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
 experiments = experiments + [experiment + ('embeddings', )
                              for experiment in experiments]
 experiments += [('embeddings', )]
@@ -211,7 +211,10 @@ for experiment in experiments:
     y_train = le.fit_transform(y_train_docs)
     y_test = le.transform(y_test_docs)
     # initialize a classifier
-    clf = LogisticRegression(C=1.0, class_weight='auto')
+    if sys.argv[3] == 'auto':
+        clf = LogisticRegression(C=1.0, class_weight='auto')
+    else:
+        clf = LogisticRegression(C=1.0)
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
     print classification_report(y_test, preds)
