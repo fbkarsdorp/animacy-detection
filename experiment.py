@@ -9,6 +9,7 @@ from sklearn.cross_validation import train_test_split
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
@@ -198,6 +199,7 @@ classifiers = {
     'lr': LogisticRegression(C=1.0),
     'sgd': SGDClassifier(n_iter=100, shuffle=True),
     'svm': LinearSVC(),
+    'knn': KNeighborsClassifier(weights='distance', metric='cosine')
 }
 
 for experiment in experiments:
