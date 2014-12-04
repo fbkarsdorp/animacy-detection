@@ -219,6 +219,7 @@ for experiment in experiments:
     y_test = le.transform(y_test_docs)
     # initialize a classifier
     clf = classifiers[sys.argv[3]]
+    print clf.__class__.__name__
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
     print classification_report(y_test, preds)
