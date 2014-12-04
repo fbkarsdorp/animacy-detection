@@ -211,7 +211,7 @@ for experiment in experiments:
     y_train = le.fit_transform(y_train_docs)
     y_test = le.transform(y_test_docs)
     # initialize a classifier
-    clf = LogisticRegression(C=1.0)
+    clf = LogisticRegression(C=1.0, class_weight='auto')
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
     print classification_report(y_test, preds)
