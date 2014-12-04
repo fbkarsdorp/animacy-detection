@@ -8,7 +8,8 @@ from sklearn.base import BaseEstimator
 from sklearn.cross_validation import train_test_split
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
@@ -193,6 +194,12 @@ experiments = experiments + [experiment + ('embeddings', )
                              for experiment in experiments]
 experiments += [('embeddings', )]
 
+classifiers = {
+    'lr': LogisticRegression(C=1.0),
+    'sgd': SGDClassifier(n_iter=100, shuffle=True),
+    'svm': LinearSVC(),
+}
+
 for experiment in experiments:
     print "Features: %s" % ', '.join(experiment)
     if 'embeddings' in experiment and len(experiment) > 1:
@@ -211,10 +218,7 @@ for experiment in experiments:
     y_train = le.fit_transform(y_train_docs)
     y_test = le.transform(y_test_docs)
     # initialize a classifier
-    if sys.argv[3] == 'auto':
-        clf = LogisticRegression(C=1.0, class_weight='auto')
-    else:
-        clf = LogisticRegression(C=1.0)
+    clf = classifiers[sys.argv[3]]
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
     print classification_report(y_test, preds)
