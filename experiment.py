@@ -28,7 +28,7 @@ def load_data(limit=None):
                 y.append([])
             else:
                 fields = line.strip().split('\t')
-                X[-1].append([field if field else None for field in fields[:-2]])
+                X[-1].append([field.lower() if field else None for field in fields[:-2]])
                 assert X[-1]
                 y[-1].append(fields[-2])
     return X, y
@@ -116,7 +116,7 @@ class WordEmbeddings(BaseEstimator):
     def transform(self, X):
         # x is a document, word[0] is the word token
         return np.vstack([self.model[word[0]] if word[0] in self.model else
-                          np.zeros(model.layer1_size) for x in X for word in x])
+                          np.zeros(self.model.layer1_size) for x in X for word in x])
 
     def fit_transform(self, X, y=None):
         self.fit(X, y)
