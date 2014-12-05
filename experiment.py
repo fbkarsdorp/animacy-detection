@@ -1,6 +1,7 @@
 import codecs
 import sys
 
+from functools import partial
 import numpy as np
 import scipy.sparse as sp
 
@@ -11,7 +12,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, precision_recall_fscore_support
 from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
@@ -225,6 +226,7 @@ for experiment in experiments:
     print clf.__class__.__name__
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
+    classification_report = partial(precision_recall_fscore_support, average='weighted')
     print classification_report(y_test, preds)
     print "Classification report on nouns:"
     noun_preds = []
