@@ -37,6 +37,7 @@ scores = np.zeros((10, len(experiments)))
 sizes = []
 
 for e, experiment in enumerate(experiments):
+    sizes = []
     print experiment
     for i, train_size in enumerate(np.arange(0.1, 1.1, 0.1)):
         size = int(len(X_train_docs) * train_size)
