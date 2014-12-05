@@ -1,7 +1,6 @@
 import codecs
 import sys
 
-from functools import partial
 import numpy as np
 import scipy.sparse as sp
 
@@ -12,11 +11,11 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report, precision_recall_fscore_support
+from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
-
+from gensim import matutils
 
 def load_data(limit=None):
     X, y = [[]], [[]]
@@ -107,6 +106,37 @@ class Windower(BaseEstimator):
         return self.transform(X)
 
 
+class TripletEmbeddings(BaseEstimator):
+    def __init__(self, model, summed=True):
+        self.model = model
+        self.summed = summed
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X_ = []
+        for d, doc in enumerate(X):
+            for i, word in enumerate(doc):
+                if self.summed:
+                    stack = np.vstack
+                else:
+                    stack = np.hstack
+                embeddings = stack(
+                    [self.model[doc[k][0].lower()] if
+                     (k >= 0 and k < len(doc) and doc[k][0].lower() in self.model) else
+                     np.zeros(self.model.layer1_size) for k in (i-1, i, i+1)])
+                if self.summed:
+                    embeddings = matutils.unitvec(embeddings.mean(axis=0)).astype(np.float32)
+                X_.append(embeddings)
+        X_ = np.vstack(X_)
+        return X_
+
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)
+
+
 class WordEmbeddings(BaseEstimator):
     def __init__(self, model):
         self.model = model
@@ -191,11 +221,12 @@ model = Word2Vec.load(sys.argv[1])
 # model.init_sims(replace=True)
 
 # set up a number of experimental settings
-experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
-               ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
-experiments = experiments + [experiment + ('embeddings', )
-                             for experiment in experiments]
-experiments += [('embeddings', )]
+#experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
+#               ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
+#experiments = experiments + [experiment + ('embeddings', )
+#                             for experiment in experiments]
+#experiments += [experiment + ('tripletembeddings', ) for experiment in experiments]
+experiments = [('embeddings', ), ('tripletembeddings',)]
 
 classifiers = {
     'lr': LogisticRegression(C=1.0),
@@ -207,11 +238,22 @@ classifiers = {
 for experiment in experiments:
     print "Features: %s" % ', '.join(experiment)
     if 'embeddings' in experiment and len(experiment) > 1:
-        features = FeatureStacker(('windower', Windower(window_size=3)),
-                                  ('embeddings', WordEmbeddings(model)))
+        if 'tripletembeddings' in experiment:
+            features = FeatureStacker(('windower', Windower(window_size=3)),
+                                      ('embeddings', WordEmbeddings(model)),
+                                      ('tripletembeddings', TripletEmbeddings(model)))
+        else:
+            features = FeatureStacker(('windower', Windower(window_size=3)),
+                                      ('embeddings', WordEmbeddings(model)))
     elif 'embeddings' in experiment:
         features = WordEmbeddings(model)
         experiment = ('word', ) + experiment # needed to extract the vectors
+    elif 'tripletembeddings' in experiment and len(experiment) > 1:
+        features = FeatureStacker(('windower', Windower(window_size=3)),
+                                  ('tripletembeddings', TripletEmbeddings(model)))
+    elif 'tripletembeddings' in experiment:
+        features = TripletEmbeddings(model)
+        experiment = ('word', ) + experiment
     else:
         features = Windower(window_size=3)
     X_train = include_features(X_train_docs, experiment)
@@ -226,7 +268,6 @@ for experiment in experiments:
     print clf.__class__.__name__
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
-    classification_report = partial(precision_recall_fscore_support, average='weighted')
     print classification_report(y_test, preds)
     print "Classification report on nouns:"
     noun_preds = []
