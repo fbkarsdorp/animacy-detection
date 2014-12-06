@@ -114,7 +114,7 @@ class WordEmbeddings(BaseEstimator):
         return self
 
     def transform(self, X):
-        # x is a document, word[0] is the word tokenq
+        # x is a document, word[0] is the word token
         return np.vstack([self.model[word[0].lower()] if word[0].lower() in self.model else
                           np.zeros(self.model.layer1_size) for x in X for word in x])
 
