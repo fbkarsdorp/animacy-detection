@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import f1_score
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
@@ -16,7 +16,7 @@ from experiment import FeatureStacker, WordEmbeddings, Windower, load_data
 from experiment import include_features
 
 
-model = Word2Vec.load(sys.argv[1])
+model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
 X, y = load_data(sys.argv[2])
 
 X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
@@ -58,10 +58,8 @@ for e, experiment in enumerate(experiments):
         clf = LogisticRegression(C=1.0)
         clf.fit(X_train, y_train)
         preds = clf.predict(X_test)
-    scores[i, e] = precision_recall_fscore_support(y_test, preds, average='micro')[2]
+        scores[i, e] = f1_score(y_test, preds, average='micro')
 
 df = pd.DataFrame(scores, index=sizes,
                   columns=['_'.join(exp) for exp in experiments])
-fig = sb.plt.figure()
-ax = df.plot()
-sb.plt.savefig("learning_curve.pdf")
+df.to_csv("learning_curve.csv")
