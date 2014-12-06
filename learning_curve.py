@@ -16,7 +16,7 @@ from experiment import FeatureStacker, WordEmbeddings, Windower, load_data
 from experiment import include_features
 
 
-model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+model = Word2Vec.load(sys.argv[1])
 X, y = load_data(sys.argv[2])
 
 X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
