@@ -11,7 +11,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
@@ -228,6 +228,8 @@ if __name__ == '__main__':
         clf.fit(X_train, y_train)
         preds = clf.predict(X_test)
         print classification_report(y_test, preds)
+        pred_probs = clf.predict_proba(X_test)
+        print 'AUC', roc_auc_score(y_test, pred_probs)
         print "Classification report on nouns:"
         noun_preds = []
         i = 0
@@ -238,9 +240,9 @@ if __name__ == '__main__':
             i += len(X[idx])
         print classification_report(y_test[noun_preds], preds[noun_preds])
 
-        print "Fitting a majority vote DummyClassifier"
-        dummy_clf = DummyClassifier(strategy='constant', constant=1)
-        dummy_clf.fit(X_train, y_train)
-        preds = dummy_clf.predict(X_test)
-        print "Classification report for Dummy Classifier:"
-        print classification_report(y_test, preds)
+        # print "Fitting a majority vote DummyClassifier"
+        # dummy_clf = DummyClassifier(strategy='constant', constant=1)
+        # dummy_clf.fit(X_train, y_train)
+        # preds = dummy_clf.predict(X_test)
+        # print "Classification report for Dummy Classifier:"
+        # print classification_report(y_test, preds)
