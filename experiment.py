@@ -186,6 +186,8 @@ if __name__ == '__main__':
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     noun_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
+    ambiguous_scores = pd.DataFrame(
+        columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     model = Word2Vec.load(sys.argv[1])
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
@@ -200,6 +202,9 @@ if __name__ == '__main__':
         'svm': LinearSVC(),
         'knn': KNeighborsClassifier(weights='distance')
     }
+
+    ambiguous_words = set(line.strip() for line in codecs.open(
+        'data/ambiguous.txt', encoding='utf-8'))
 
     n_experiments = 0
     for k, (train_index, test_index) in enumerate(KFold(
@@ -253,6 +258,22 @@ if __name__ == '__main__':
             ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
             noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
             noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+
+            ambiguous_preds = []
+            i = 0
+            for idx in test_index:
+                for j, w in enumerate(X[idx]):
+                    if w[0] in ambiguous_words:
+                        ambiguous_preds.append(i + j)
+                i += len(X[idx])
+            print "Classification report on ambigous words:"
+            print classification_report(y_test[ambiguous_preds], preds[ambiguous_preds])
+            p, r, f, _ = precision_recall_fscore_support(
+                y_test[ambiguous_preds], preds[ambiguous_preds])
+            ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
+            ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+            ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+
             n_experiments += 2
 
         # print "Fitting a majority vote DummyClassifier"
