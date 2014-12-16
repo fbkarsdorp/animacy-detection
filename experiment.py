@@ -4,7 +4,6 @@ import sys
 import numpy as np
 import scipy.sparse as sp
 import pandas as pd
-import seaborn as sb
 
 from sklearn.base import BaseEstimator
 from sklearn.cross_validation import KFold
@@ -13,7 +12,7 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report, average_precision_score
-from sklearn.metrics import precision_recall_curve, precision_recall_fscore_support
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
@@ -181,7 +180,6 @@ if __name__ == '__main__':
 
     # read the data and extract all features
     X, y = load_data(sys.argv[2], limit=None)
-    # split the data into a train and test set (this is based on documents, not words!)
     scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     noun_scores = pd.DataFrame(
