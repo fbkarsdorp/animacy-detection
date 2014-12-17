@@ -75,7 +75,7 @@ the idea that the division between animate and inanimate is an innate
 part of how we see the world.
 
 A common view supported by philosophers such as Daniel Dennett is that
-animacy and aliveness are better to be treated as epistemological
+animacy and aliveness are to be treated as epistemological
 stances rather than fixed states in the world \cite{dennett:96}: not
 ineffable qualia but behavioral capacity defines our stance towards
 objects. Depending on whether people \textit{think} that an object is
@@ -115,24 +115,24 @@ Given the fundamental nature of the distinction between animate and
 inanimate, it is perhaps not too surprising that it has proven to be
 useful in a variety of natural language processing tasks dealing with
 e.g.\ anaphora resolution and dependency parsing
-\cite{orasan:07,lee:13,ovr:niv:07}. Existing methods to automatically
-label natural language for animacy are usually either rule based or
-apply machine learning techniques, or make a combination of
-both. Common to most approaches is that they make use of semantic
-lexicons with information about animacy and syntactic cues in a
-text. Both feature types are relatively costly to obtain as they
-require large vocabularies or syntactic parsing systems, which, with
-the exception of a few languages, are not readily available.
+\cite{orasan:07,lee:13,ovr:niv:07}. Existing methods for the automatic
+labeling of text for animacy are usually either rule based or apply
+machine learning techniques, or make a combination of both. Common to
+most approaches is that they make use of semantic lexicons with
+information about animacy and syntactic cues in a text. Both feature
+types are relatively costly to obtain as they require large
+vocabularies or syntactic parsing systems, which, with the exception
+of a few languages, are not readily available.
 
 In this paper we present a new linguistically uninformed model to
-automatically label texts for animacy. We will show that we can (mostly)
+automatically label texts for animacy. We show that we can (mostly)
 do away with features that require syntactic parsing or semantic
-lexicons while still yielding competitive performance. We will focus
+lexicons while still yielding competitive performance. We focus
 on labeling animacy in stories because stories pose some interesting
 problems to automatic systems of animacy recognition. As the example
 of the fleeing pancake already made clear, quite some entities in
 stories, though inanimate in the `real' world, exhibit all behavioral
-capacities to consider them to be animate and rational agents. Such
+capacities to consider them animate and rational agents. Such
 examples make a clear case for developing dynamic, data driven systems
 that do not rely too much on static and fixed world knowledge.
 
@@ -197,7 +197,7 @@ bag-of-words with and without their corresponding Part-of-Speech tags,
 external syntactic features that describe the dependency relation of a
 noun to a verb (i.e.\ subject relation, object relation etc.)  This is
 the only study that makes use of a fully labeled corpus for animacy.
-Not so much concerned with animacy detection, \cite{karsdorp:12}
+Partially related to animacy detection, \cite{karsdorp:12}
 attempt to extract the cast (i.e.\ all characters) from a
 story. Similar to \cite{bowman:12} they rely on dependency tags to
 extract the subjects of direct and indirect speech.
@@ -227,7 +227,7 @@ however, we cannot rely on these resources, either because they do not
 exist, or because their performance is insufficient.  Second, animacy
 detection is often seen as a useful feature for a range of natural
 language processing techniques, such as anaphora resolution and
-syntactic parsing. The mutual dependence of these techniques and
+syntactic parsing. The mutual dependence between these techniques and
 animacy detection, however, leads to a chicken and egg
 situation. Another problem with the approaches above is that they are
 lemma-based, which means that the models are generally insensitive to
@@ -373,12 +373,12 @@ that ``Die Bedeutung eines Wortes ist sein Gebrauch in der Sprache''
 (PI 43). The well-known insight in computational linguistics that the
 meaning of words can be approximated by comparing the linguistic
 contexts in which words appear, is an implementation of this very
-idea. The idea is very simple, and equally strong: words that often
+idea. The idea is very simple, yet powerful: words that often
 co-appear with the same set of words, will have a more similar
 meaning. Recently, there has been a lot of interest in procedures that
-can automatically induce so-called `word-embeddings' from large,
+can automatically induce so-called `word embeddings' from large,
 unannotated collections of texts. These models typically attempt to
-learn a lower-dimensional vector for each word in the vocabulary which
+learn a lower dimensional vector for each word in the vocabulary which
 captures the typical co-occurrence patterns of the word in the
 corpus. The similarity between words can then be approximated by
 applying arithmetics to these vectors of word embeddings.
@@ -409,7 +409,8 @@ story') (0.709), \textit{jeugdboek} (`youth book') (0.706).
 
 We add the word embedding vectors to our animacy model as follows. We
 augment each word in the data with its corresponding 300 dimension
-word embeddings vector. Out-of-vocabulary words were given a vector were all dimensions are set to zero.
+word embeddings vector. Out-of-vocabulary words were given a vector in
+which all dimensions are set to zero.
 
 
 \subsection{Models}
@@ -426,7 +427,7 @@ features in model 1 to 4 plus word embeddings.
 
 \section{Results}\label{sec:results}
 
-In table \ref{tab:results-all} we present the results for all nine
+In Table \ref{tab:results-all} we present the results for all nine
 models on the complete data set. For each model we report the
 precision, recall, $F1$-score and Area Under the Precision-Recall
 Curve (AUC) for the animate words and the
@@ -439,21 +440,21 @@ inanimate words.
 features & class & precision &  recall & $F1$ &  AUC \\
 \midrule
 \multirow{2}{*}{embeddings}                            & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
-                                                       & animate     &       0.92 &    0.89 &    0.91 &  \\
-\multirow{2}{*}{word}                                  & inanimate     &       0.96 &    0.99 &    0.98 & \multirow{2}{*}{0.94} \\
+                                                       & animate     &       0.92 &    0.89 &    0.90 &  \\
+\multirow{2}{*}{word}                                  & inanimate     &       0.96 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
                                                        & animate     &       0.94 &    0.78 &    0.85 &  \\
 \multirow{2}{*}{word + embeddings}                     & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
                                                        & animate     &       0.93 &    0.90 &    0.91 &  \\
-\multirow{2}{*}{word + PoS}                            & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.86 &    0.90 &  \\
+\multirow{2}{*}{word + PoS}                            & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.95} \\
+                                                       & animate     &       0.94 &    0.86 &    0.89 &  \\
 \rowcolor{Gray}                                        & inanimate     &       0.98 &    0.99 &    0.99 &  \\
-\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings}   & animate     &       0.94 &    0.92 &    0.93 & \multirow{-2}{*}{0.97} \\
-\multirow{2}{*}{word + PoS + lemma}                    & inanimate    &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.87 &    0.90 &  \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings}   & animate     &       0.94 &    0.91 &    0.93 & \multirow{-2}{*}{0.97} \\
+\multirow{2}{*}{word + PoS + lemma}                    & inanimate    &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
+                                                       & animate     &       0.94 &    0.86 &    0.90 &  \\
 \multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.98 &    0.99 &    0.99 & \multirow{2}{*}{0.97} \\
-                                                       & animate     &       0.94 &    0.92 &    0.93 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.88 &    0.91 &  \\
+                                                       & animate     &       0.94 &    0.91 &    0.93 &  \\
+\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
+                                                       & animate     &       0.94 &    0.86 &    0.90 &  \\
 \multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.98 &    0.99 &    0.99 & \multirow{2}{*}{0.97} \\
                                                        & animate     &       0.94 &    0.92 &    0.93 &  \\
 \bottomrule
@@ -467,7 +468,7 @@ All models perform well on classifying inanimate words. However, since
 this is the majority class, it is of course far more interesting to
 compare the performance of the models on the animate instances. It is
 interesting to observe that the `simple' $n$-gram word model already
-performs rather well. Adding more features, like Part-of-Speech,
+performs rather well. Adding more features, such as Part-of-Speech,
 lemmata, etcetera, only has a positive impact on the recall of the
 model, while leaving the precision untouched. As can be observed from
 the table, employing the rather expensive dependency features shows
@@ -504,23 +505,23 @@ instances and 0.94 for inanimate instances.
 features & class &  precision &  recall & $F1$ &  AUC \\
 \midrule
 \multirow{2}{*}{embeddings}                            & inanimate     &       0.89 &    0.94 &    0.92 & \multirow{2}{*}{0.92} \\
-                                                       & animate       &       0.91 &    0.85 &    0.88 &  \\
+                                                       & animate       &       0.92 &    0.84 &    0.88 &  \\
 \multirow{2}{*}{word}                                  & inanimate     &       0.78 &    0.98 &    0.87 & \multirow{2}{*}{0.91} \\
                                                        & animate       &       0.96 &    0.60 &    0.74 &  \\
 \multirow{2}{*}{word + embeddings}                     & inanimate     &       0.90 &    0.96 &    0.93 & \multirow{2}{*}{0.96} \\
                                                        & animate       &       0.94 &    0.86 &    0.89 &  \\
 \multirow{2}{*}{word + pos}                            & inanimate     &       0.86 &    0.96 &    0.90 & \multirow{2}{*}{0.94} \\
-                                                       & animate       &       0.92 &    0.78 &    0.84 &  \\
+                                                       & animate       &       0.93 &    0.78 &    0.84 &  \\
 \rowcolor{Gray}                                        & inanimate     &       0.93 &    0.96 &    0.94 &  \\
 \rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & animate       &       0.94 &    0.89 &    0.92 &\multirow{-2}{*}{0.97}  \\
 \multirow{2}{*}{word + PoS + lemma}                    & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
                                                        & animate       &       0.94 &    0.80 &    0.86 &  \\
-\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.93 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.92 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
                                                        & animate       &       0.94 &    0.89 &    0.92 &  \\
 \multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
                                                        & animate       &       0.93 &    0.80 &    0.86 &  \\
 \multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.93 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
-                                                       & animate       &       0.94 &    0.90 &    0.92 &  \\
+                                                       & animate       &       0.94 &    0.89 &    0.92 &  \\
 \bottomrule
 \end{tabular}
 \caption{Precision, recall, $F1$ and Area Under the Curve (AUC) scores for animate and inanimate classes
