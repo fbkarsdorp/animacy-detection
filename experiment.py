@@ -186,7 +186,7 @@ if __name__ == '__main__':
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
-    model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+    model = Word2Vec.load(sys.argv[1])
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
                    ('word', 'pos', 'root', 'rel')] # tuple(FIELDNAMES)
