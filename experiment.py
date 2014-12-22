@@ -186,16 +186,16 @@ if __name__ == '__main__':
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
-    model = Word2Vec.load(sys.argv[1])
+    model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
-                   ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
+                   ('word', 'pos', 'root', 'rel')] # tuple(FIELDNAMES)
     experiments = experiments + [experiment + ('embeddings', )
                                  for experiment in experiments]
     experiments += [('embeddings', )]
 
     classifiers = {
-        'lr': LogisticRegression(C=1.0),
+        'lr': LogisticRegression,
         'sgd': SGDClassifier(n_iter=100, shuffle=True),
         'svm': LinearSVC(),
         'knn': KNeighborsClassifier(weights='distance')
@@ -211,33 +211,76 @@ if __name__ == '__main__':
         X_train_docs = [X[i] for i in train_index]
         y_train_docs = [label for i in train_index for label in y[i]]
         X_test_docs = [X[i] for i in test_index]
+        test_words = [word[0] for i in test_index for word in X[i]]
         y_test_docs = [label for i in test_index for label in y[i]]
 
         for experiment in experiments:
+            backoff = False
             print "Features: %s" % ', '.join(experiment)
             exp_name = '_'.join(experiment)
             if 'embeddings' in experiment and len(experiment) > 1:
                 features = FeatureStacker(('windower', Windower(window_size=3)),
                                           ('embeddings', WordEmbeddings(model)))
+                backoff_features = Windower(window_size=3)
+                backoff = True
             elif 'embeddings' in experiment:
                 features = WordEmbeddings(model)
                 experiment = ('word', ) + experiment # needed to extract the vectors
             else:
                 features = Windower(window_size=3)
+
             X_train = include_features(X_train_docs, experiment)
             X_test = include_features(X_test_docs, experiment)
             X_train = features.fit_transform(X_train)
             X_test = features.transform(X_test)
+
+            if backoff:
+                X_train_backoff = include_features(
+                    X_train_docs, [f for f in experiment if f != 'embeddings'])
+                X_train_backoff = backoff_features.fit_transform(X_train_backoff)
+                X_test_backoff = include_features(
+                    X_test_docs, [f for f in experiment if f != 'embeddings'])
+                X_test_backoff = backoff_features.transform(X_test_backoff)
+
             le = LabelEncoder()
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]]
+            clf = classifiers[sys.argv[3]]()
+            backoff_clf = classifiers[sys.argv[3]]()
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
-            preds = clf.predict(X_test)
+            if backoff:
+                backoff_clf.fit(X_train_backoff, y_train)
+
+            if backoff:
+                preds, pred_probs = [], []
+                for i, word in enumerate(X_test):
+                    if test_words[i].lower() not in model:
+                        preds.append(backoff_clf.predict(X_test_backoff[i])[0])
+                        pred_probs.append(backoff_clf.predict_proba(X_test_backoff[i]))
+                    else:
+                        preds.append(clf.predict(X_test[i])[0])
+                        pred_probs.append(clf.predict_proba(X_test[i])[0])
+                preds = np.array(preds)
+                pred_probs = np.vstack(pred_probs)
+
+            elif exp_name == "embeddings":
+                preds, pred_probs = [], []
+                for i, word in enumerate(X_test):
+                    if test_words[i].lower() not in model:
+                        preds.append(0)
+                        pred_probs.append(np.array([1.0, 0.0]))
+                    else:
+                        preds.append(clf.predict(word)[0])
+                        pred_probs.append(clf.predict_proba(word)[0])
+                preds = np.array(preds)
+                pred_probs = np.vstack(pred_probs)
+            else:
+                preds = clf.predict(X_test)
+                pred_probs = clf.predict_proba(X_test)
+
             p, r, f, _ = precision_recall_fscore_support(y_test, preds)
-            pred_probs = clf.predict_proba(X_test)
             ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
             scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
             scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
