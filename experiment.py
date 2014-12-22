@@ -246,8 +246,8 @@ if __name__ == '__main__':
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]]()
-            backoff_clf = classifiers[sys.argv[3]]()
+            clf = classifiers[sys.argv[3]](C=1.0, random_state=1)
+            backoff_clf = classifiers[sys.argv[3]](C=1.0, random_state=1)
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -257,6 +257,7 @@ if __name__ == '__main__':
                 preds, pred_probs = [], []
                 for i, word in enumerate(X_test):
                     if test_words[i].lower() not in model:
+                        print "Backoff prediction for", test_words[i]
                         preds.append(backoff_clf.predict(X_test_backoff[i])[0])
                         pred_probs.append(backoff_clf.predict_proba(X_test_backoff[i]))
                     else:
@@ -269,6 +270,7 @@ if __name__ == '__main__':
                 preds, pred_probs = [], []
                 for i, word in enumerate(X_test):
                     if test_words[i].lower() not in model:
+                        print "Default prediction for", test_words[i]
                         preds.append(0)
                         pred_probs.append(np.array([1.0, 0.0]))
                     else:
