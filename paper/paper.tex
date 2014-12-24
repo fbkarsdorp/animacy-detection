@@ -52,8 +52,11 @@
 \maketitle
 
 \begin{abstract}
-  This paper presents a linguistically uninformed computational model
-  for animacy classification. The model makes use of word $n$-grams in
+  Existing animacy detection systems, while scoring well, seem to be
+  out of sync with current (psycho)linguistic research, which takes a
+  more dynamic approach to animacy. This paper presents a
+  linguistically uninformed computational model for animacy
+  classification. The model makes use of word $n$-grams in
   combinations with lower dimensional word embedding representations
   that were learned from a web-scale corpus. We compare the model to a
   number of linguistically informed models that use features such as
@@ -65,23 +68,45 @@
 For almost all species in the world, the capacity to distinguish
 animate objects from inanimate objects is essential to their
 survival. Those objects could be prey, for example, or predators or
-mates. The fundamental nature of the distinction between animate and
-inanimate is reflected in the fact that the division is acquired very
-early in life~\cite{opfer:02}. Children of less than 6 months old
-are well able to make the division. Moreover, recent brain research
-shows that the distinction appears in the organization of the brain
-(e.g.~\cite{gao:12}). For some researchers this provides evidence for
-the idea that the division between animate and inanimate is an innate
-part of how we see the world.
+mates. The fundamental nature that the distinction between animate and
+inanimate has for humans is reflected in the fact that this division
+is acquired very early in life \cite{opfer:02}: children of less than
+6 months old are well able to distinguish the two categories from one
+another. Moreover, recent brain research shows that the distinction
+appears in the organization of the brain (e.g.~\cite{gao:12}). For
+some researchers, this provides evidence for the idea that the
+division between animate and inanimate is an innate part of how we see
+the world.
 
-A common view supported by philosophers such as Daniel Dennett is that
-animacy and aliveness are to be treated as epistemological
-stances rather than fixed states in the world \cite{dennett:96}: not
-ineffable qualia but behavioral capacity defines our stance towards
-objects. Depending on whether people \textit{think} that an object is
-animate, they utilize different cognitive strategies to explain and
-predict the actions of those objects. Th following opening of a
-well-known story will make this point more clear:
+Traditionally, even though animacy may be a scalar rather than a
+strictly categorical distinction (see e.g. the animacy hierarchy in
+\cite{comrie:89} and research such as \cite{rosenbach:08}), the
+animate/inanimate distinction is taken as fixed with regard to lexical
+items. This standpoint has been challenged, however, by researchers
+from different fields. Firstly, it has long been established in
+linguistic typology that not all languages award animacy to the same
+entities in different grammatical categories: as \cite{comrie:89} for
+example notes, English, and many other languages, distinguishes
+between human and not-human in the choice of pronouns, whereas Russian
+distinguishes between animate, entailing humans and animals, versus
+non-animate, in their interrogative pronouns. This indicates different
+subdivisions of animacy in the respective languages. Secondly,
+philosophers such as Daniel Dennett support the view that animacy and
+aliveness are to be treated as epistemological stances rather than
+fixed states in the world: not ineffable qualia but behavioral
+capacity defines our stance towards objects \cite{dennett:96}. In
+other words, depending on whether people \textit{think} that an object
+is animate, they utilize different cognitive strategies to explain and
+predict the actions of those objects. Finally, evidence from
+psycholinguistic research has accumulated to support the view of
+animacy as a cognitive viewpoint rather than an extra-perceptive
+absolute. \cite{nieuwland:05} for example show that test subjects
+readily accept animate behavior from inanimate objects within the
+proper contexts, and \cite{vogels:13} moreover emphasize the relation
+between animacy and motion, showing that factors such as
+self-propelment play a crucial role in recognizing and/or awarding
+animacy to certain objects. This is exemplified in the opening of this
+well-known story:
 
 \begin{quotation} {\it A farmer bought a pancake on the market. Once
     he got home, the farmer was hungry and began to bake the
@@ -91,25 +116,28 @@ well-known story will make this point more clear:
     field, as hard as he could\ldots}
 \end{quotation}
 
-As readers (or listeners) of a story, we choose to view participating
-objects at varying levels of abstraction in order to predict their
-behavior. Dennett \cite{dennett:96} defines three levels of
-abstraction: (1) the \textit{physical stance}, (2) the \textit{design
-  stance} and (3) the \textit{intentional stance}. The physical stance
-deals with predictions about objects given their physical
-properties. The design stance is slightly more abstract and deals with
-concepts like purpose, function or design. Finally the intentional
-stance is concerned with belief, thinking and intentions. These are
-all cognitive strategies we use to predict and explain the actions of
-objects in our environment. Interestingly, in the process of reading
-the opening of the story about the fleeing pancake, readers and
-listeners experience the transition from one strategy to the next
-quite clearly. Initially, the pancake is interpreted from a physical
-stance or perhaps the more abstract design stance in terms of the
-purpose (i.e. to stave off hunger). It is only at the last adverbial
-phrase `as hard as he could' that we start to wonder whether we should
-adopt to the yet more abstract intentional stance and consider the
-pancake to be a rational agent.
+Although initially, based on their knowlegde of the world, readers
+will regard the pancake as inamimate, the self-propelled motion verb
+`rolled' initiates our shift towards an animate interpretation of the
+pancake. As readers (or listeners) of a story, we choose to view
+participating objects at varying levels of abstraction in order to
+predict their behavior. Dennett \cite{dennett:96} defines three levels
+of abstraction: (1) the \textit{physical stance}, (2) the
+\textit{design stance} and (3) the \textit{intentional stance}. The
+physical stance deals with predictions about objects given their
+physical properties. The design stance is slightly more abstract and
+deals with concepts like purpose, function or design. Finally the
+intentional stance is concerned with belief, thinking and
+intentions. These are all cognitive strategies we use to predict and
+explain the actions of objects in our environment. Interestingly, in
+the process of reading the opening of the story about the fleeing
+pancake, readers and listeners experience the transition from one
+strategy to the next quite clearly. Initially, the pancake is
+interpreted from a physical stance, or perhaps the more abstract
+design stance in terms of the purpose (i.e. to stave off hunger). It
+is only at the last adverbial phrase `as hard as he could' that we
+start to wonder whether we should adopt to the yet more abstract
+intentional stance and consider the pancake to be a rational agent.
 
 Given the fundamental nature of the distinction between animate and
 inanimate, it is perhaps not too surprising that it has proven to be
@@ -118,54 +146,41 @@ e.g.\ anaphora resolution and dependency parsing
 \cite{orasan:07,lee:13,ovr:niv:07}. Existing methods for the automatic
 labeling of text for animacy are usually either rule based or apply
 machine learning techniques, or make a combination of both. Common to
-most approaches is that they make use of semantic lexicons with
-information about animacy and syntactic cues in a text. Both feature
-types are relatively costly to obtain as they require large
-vocabularies or syntactic parsing systems, which, with the exception
-of a few languages, are not readily available.
+most approaches is the fact that they make use of semantic lexicons
+with information about animacy, as well as syntactic cues in a
+text. Both feature types are relatively costly to obtain as they
+require large vocabularies or syntactic parsing systems, which, with
+the exception of a few languages, are not readily available.
 
 In this paper we present a new linguistically uninformed model to
-automatically label texts for animacy. We show that we can (mostly)
-do away with features that require syntactic parsing or semantic
-lexicons while still yielding competitive performance. We focus
-on labeling animacy in stories because stories pose some interesting
-problems to automatic systems of animacy recognition. As the example
-of the fleeing pancake already made clear, quite some entities in
-stories, though inanimate in the `real' world, exhibit all behavioral
-capacities to consider them animate and rational agents. Such
-examples make a clear case for developing dynamic, data driven systems
-that do not rely too much on static and fixed world knowledge.
+automatically label texts for animacy. We show that we can (mostly) do
+away with features that require syntactic parsing or semantic lexicons
+while still yielding competitive performance. We focus on labeling
+animacy in stories because stories pose some interesting problems to
+automatic systems of animacy recognition. As the example of the
+fleeing pancake already made clear, quite some entities in stories,
+though inanimate in the `real' world, exhibit all behavioral
+capacities to consider them animate and rational agents. Another
+example is the \textit{Sorcerer's Apprentice} sequence in Walt
+Disney's famous \textit{Fantasia}, in which brooms display the ability
+to collect buckets of water. Such examples, in which otherwise as
+inanimatedly labeled entities such as pancakes and brooms act, make a
+clear case for developing dynamic, data driven systems that do not
+rely too much on static and fixed world knowledge, but rather on
+immediate context.
 
 The rest of this paper is structured as follows. We will start with a
 short overview of existing techniques for automatically labeling
-animacy in texts (\S\ref{sec:previous-work}). After a description of
-the corpus used in our study and how the annotations of the corpus
-have been established (\S\ref{sec:data}), we will give an account of
-our computational models in Section \ref{sec:models}. We report on the
+animacy in texts, including the definitions of animacy used in these
+papers (\S\ref{sec:previous-work}). After a description of the corpus
+used in our study and how the annotations of the corpus have been
+established (\S\ref{sec:data}), we will give an account of our
+computational models in Section \ref{sec:models}. We report on the
 empirical results in Section \ref{sec:results}. The last section
 offers our conclusions and possible directions for future research.
 
 
 \section{Previous Work}\label{sec:previous-work}
-
-%ik wil eigenlijk meer uitleg in deze paragraaf:
-In most of the literature on automatic animacy detection, a static,
-binary distinction is made between animate and
-inanimate. \cite{bowman:12} for example, define objects as animate if
-they are alive and have the ability to move under their own
-will. \cite{orasan:07} define animacy in the context of anaphora
-resolution: something is animate ``if its referent can also be
-referred to using one of the pronouns he, she, him, her, his, hers,
-himself, herself, or a combination of such pronouns
-(e.g. his/her)''. However, some parts of these definitions are
-somewhat circular and essentialistic. More importantly, they are not
-particularly applicable to the rich and wondrous entities that live in
-the realm of stories. As our example above showed, it is possible for
-an otherwise as inanimate labeled object to attain animacy. We
-therefore choose to define animacy in terms of Dennett's intentional
-stance, which is more dynamic, and which ultimately comes down to the
-question whether ``you decide to treat the object whose behavior is to
-be predicted as a rational agent'' \cite[pp. 17]{dennett:96}.
 
 A handful of papers deal with automatic animacy detection. Most
 approaches make use of rule-based systems or machine learning systems
@@ -218,9 +233,8 @@ correctable model of animacy classification. They combine a variety of
 classifiers such as the WordNet-based approach of \cite{evans:00},
 dictionary sources and systems for named entity recognition.
 
-% commentary on above approaches
 The approaches mentioned above present us with a number of
-problems. First, almost all of them heavily rely on costly,
+problems. Firstly, almost all of them heavily rely on costly,
 linguistically informed features derived from lexical-semantic
 databases or syntactic parsing. For most languages in the world,
 however, we cannot rely on these resources, either because they do not
@@ -229,96 +243,149 @@ detection is often seen as a useful feature for a range of natural
 language processing techniques, such as anaphora resolution and
 syntactic parsing. The mutual dependence between these techniques and
 animacy detection, however, leads to a chicken and egg
-situation. Another problem with the approaches above is that they are
-lemma-based, which means that the models are generally insensitive to
-different usages of a particular word. A pancake is typically not an
-animate entity, but, as we have seen, whether it is animate or not may
-depend on the story in which it appears, and even within the story the
-animacy may change. We therefore need to develop a dynamic, data
-driven system that is token based and does not rely too much on static
-and fixed world knowledge.
+situation.
+
+Another major problem with the approaches above is, as was said above,
+that they are lemma-based, which means that the models are generally
+insensitive to different usages of a particular word in particular
+contexts. In other words, in most of the literature on automatic
+animacy detection, a static, binary distinction is made between
+animate and inanimate. \cite{bowman:12} for example, define objects as
+animate if they are alive and have the ability to move under their own
+will. \cite{orasan:07} define animacy in the context of anaphora
+resolution: something is animate ``if its referent can also be
+referred to using one of the pronouns he, she, him, her, his, hers,
+himself, herself, or a combination of such pronouns
+(e.g. his/her)''. However, as was explained above, these definitions
+are not necessarily in line with current linguistic and neurological
+research, and seemingly ignore findings from research such as
+\cite{nieuwland:05}. Similarly, they are not particularly applicable
+to the rich and wondrous entities that live in the realm of
+stories. As was shown above, although a pancake is typically not an
+animate entity, its animacy depends on the story in which it appears,
+and even within the story the animacy may change. To accomodate this
+possibility, we therefore choose to define animacy in terms of
+Dennett's intentional stance, which is more dynamic, and which
+ultimately comes down to the question whether ``you decide to treat
+the object whose behavior is to be predicted as a rational agent''
+\cite[pp. 17]{dennett:96}. Our system for animacy detection therefore
+needs to be dynamic, data driven, and token based. It cannot rely too
+heavily on static and fixed world knowledge.
 
 \section{The Data, Annotation and Preprocessing}\label{sec:data}
 
 To develop this dynamic, data driven system we used a corpus of Dutch
-folktales. The corpus consists of 74 Dutch stories from the collection
-\textit{Volkssprookjes uit Nederland en Vlaanderen} compiled by
+folktales. One of the reasons to use folk tales was that, as
+\cite{vogels:13} note, `In cartoons or fairy tales [\ldots] inanimate
+entities or animals are often anthropomorphized', which means that the
+material could yield interesting cases of unexpected animacy, as is
+the case with the pancake in the abovementioned story. Our corpus
+consists of 74 Dutch stories from the collection
+\textit{Volkssprookjes uit Nederland en Vlaanderen}, compiled by
 \cite{sinninghe:78}. The collection is made up of Dutch retellings of
-popular stories, including such tales as \textit{The Bremen Town
-  Musicians} (ATU 130) and \textit{The Table, the Ass, and the Stick }
-(ATU 563), as well as lesser-known stories such as \textit{The Singing
-  Bone} (ATU 780) and \textit{Cock, Hen, Duck, Pin, and Needle on a
-  Journey} (ATU 210). This last story is again a clear example of
-otherwise inanimate objects being animate in a folk story, as it
-concerns the adventures of several household items, such as a
-\textit{pin}, a \textit{hackle}, an \textit{egg}, and a
+popular and widespread stories, including such tales as \textit{The
+  Bremen Town Musicians} (ATU 130) and \textit{The Table, the Ass, and
+  the Stick } (ATU 563), as well as lesser-known stories such as
+\textit{The Singing Bone} (ATU 780) and \textit{Cock, Hen, Duck, Pin,
+  and Needle on a Journey} (ATU 210). This last story is again a clear
+example where otherwise inanimate objects are animated in a folk
+story, as it concerns the adventures of several household items, such
+as a \textit{pin}, a \textit{hackle}, an \textit{egg}, and a
 \textit{whetstone}. A digital version of the collection is available
 in the Dutch Folktale Database from the Meertens Institute (corpus
 SINVSUNV.20E).\footnote{See \url{http://www.verhalenbank.nl}} Using a
 single collection for our corpus presents us with a helpful
-homogeneity with regard to the editor, length and language use. On the
-other hand, the collection displays diversity as well in the choice of
-the stories, which entail fairy tales, legends, and sagas.
-%getallen nakijken%
-%moet je de labels hier al wel noemen? want dat lijkt me eerder een resultaat dan een pre-processing stap toch?%
+homogeneity with regard to the editor, length of the stories (which is
+between X and Y words) and language use. On the other hand, the
+collection displays diversity as well in the choice of the stories,
+which entail fairy tales, legends, and sagas.
 
-The data were labeled by two annotators. We computed an
-inter-annotator agreement score (Cohen's Kappa) of $K=0.95$ on the
-basis of five stories that were annotated by both annotators. The
-following sentence provides an example annotation. All unlabeled words
-are implicitly considered to be inanimate.
+All together, the corpus consists of 74504 words, from 5549 unique
+words. Using the annotation tool brat (brat rapid annotation tool), an
+online environment for collaborative editing\footnote{Available here:
+  \url{http://brat.nlplab.org}}, two annotators labeled words for
+animacy, within the context of the story.\footnote{On the basis of
+  five stories that were annotated by both annotators we computed an
+  inter-annotator agreement score (Cohen's Kappa) of $K=0.95$.} All
+unlabeled words were implicitly considered to be inanimate. The
+following sentence provides an example annotation.
 \begin{exe}
 \ex
 \gll Jij smid, jij bent de sterkste; hou je vast aan de bovenste
 takken, en dan ga jij kleermaker aan zijn benen hangen en zo gaan we maar door\\
-    \textsc{anim} \textsc{anim} \textsc{anim} {} {} {} {} \textsc{anim} {} {} {} {} {} {} {} {} \textsc{anim} \textsc{anim}
-    {} \textsc{anim} {} {} {} {} {} \textsc{anim} {} {} \\
+    \textsc{animate} \textsc{animate} \textsc{animate} {} {} {} {} \textsc{animate} {} {} {} {} {} {} {} {} \textsc{animate} \textsc{animate}
+    {} \textsc{animate} {} {} {} {} {} \textsc{animate} {} {} \\
 \trans `You, blacksmith, you are the strongest; hold on to the upper
 branches and then, you, tailor, will grab his legs and so we go on\ldots'
 \end{exe}
-The corpus consists of 74504 words, from 5549 unique words. All word
-tokens were assigned a binary label `animate' or `inanimate', where
-all words that were not animate (e.g. determiners, adjectives, etc.)
-were labelled as inanimate. This resulted in 11542 animate tokens of
-743 types, and 62926 inanimate tokens from 5011 unique inanimate
-words. A selection of words, such as the abovementioned
-\textit{pancake} and \textit{egg}, was labeled as both animate and
-inanimate, depending on the context. The distribution of the nouns is
-telling: of the animate tokens, 4627 (40,1\%) are nound, while only
-6878 of the inanimate tokens (11 \%) are nouns. This shows that being
-a noun is already somewhat of an indication for animacy.
+
+Because we interpreted animacy within the context of the story, the
+same lexical item could be labeled differently in different stories.
+For example, in the abovementioned example of the pancake, which
+occurs in SINVS076 in our corpus, the pancake is tagged consistently
+as `animate'. In another story, SINVS042, where at one point a soldier
+is baking pancakes, the pancakes do not act, and are thus not labeled
+as `animate'. The following sentences show how this was employed in
+practice.
+\begin{exe}
+\ex
+\gll Terwijl hij de pannekoek bakte, keek hij naar het ding, dat uit de schouw gevallen was \\
+    {} \textsc{animate} {} {} {} {} \textsc{animate} {} {} {} {} {} {} {} {} {} {}\\
+\trans `While he was baking the pancake, he looked at the thing, which had fallen from the hearth\ldots'
+\end{exe}
+\begin{exe}
+\ex
+\gll Toevallig stond de deur van de keuken open en de pannekoek rolde naar buiten, het veld in, zo hard hij maar kon.\\
+    {} {} {} {} {} {} {} {} {} {} \textsc{animate} {} {} {} {} {} {} {} {} {}\textsc{animate} {} {} \\
+\trans `Coincidentally the door of the kitchen was open and the pancake rolled outside, into the field, as fast as it could'
+\end{exe}
+
+This annotation resulted in 11542 animate tokens of 743 types, while
+implicitly yielding 62926 inanimate tokens from 5011 unique inanimate
+words. Because of our context-dependent approach, some words, such as
+\textit{pancake} and \textit{egg}, occurred in both animate types as
+inanimate types, because they were labeled as both animate and
+inanimate in some cases in our corpus. It is telling that of the
+animate tokens 4627 (40,1\%) were nouns, while only 6878 of the
+inanimate tokens (11 \%) are nouns. This shows that being a noun is
+already somewhat of an indication for animacy.
 
 After tokenization with the tokenization module of the Python software
 package Pattern \cite{smedt:12} we fed all stories to the
 state of the art syntactic parser for Dutch, Alpino \cite{bouma:01}.
-
-% gaat nu de volgorde niet fout? Eerst tokenizeren en parsen, en dan animate/inanimate toekennen?%
+%dit kan iets uitgebreider eventueel%
 
 \section{Experimental Setup}\label{sec:models}
 This section describes our experimental setup including the features
-used, the machine learning models we applied and our methods of
+used, the machine learning models we applied, and our methods of
 evaluation.\footnote{The data set and the code to perform the
   experiments are made available online at
   \url{https://fbkarsdorp.github.io/animacy-detection}}.
 
 \subsection{Task description}
-
+%misschien deze subsection invoegen in bovenstaande inleiding. FK, nee
+%ik vind dit altijd een erg prettige plaats (eventueel een
+%soortgelijke zin in de inleiding, maar hier mag-ie niet weg :-))
 We formulate the problem of animacy detection as a classification
 problem where the goal is to assign a label at word level, rather than
-at lemma level, indicating whether it represents an animate or an
-inanimate word.
+at lemma level. This label indicates whether the word is classified as
+animate or inanimate.
 
 \subsection{Evaluation}
 
 Animate words are far outnumbered by inanimate words in our collection
-(see (\S\ref{sec:data})). Reporting accuracy scores would therefore
+(see \S\ref{sec:data}). Reporting accuracy scores would therefore
 provide skewed results, strongly favoring the majority category. The
 relative rarity of animate words makes evaluation measures such as the
 well-known $F1$-score more appropriate. For all experiments we report
-on the precision, recall and $F1$-score \cite{rijsbergen:79}. Also,
-while in most of the literature on animacy detection results are only
-presented for the classification of nouns or noun phrases, we will
-present these and also report on the results for all words in a text.
+on the precision, recall and $F1$-score~\cite{rijsbergen:79}. As a
+second measure of evaluation, we compute the Area Under the Precision
+Recall Curve (AUC_{PR}) which also takes into account possible class
+imbalance. Also, while in most of the literature on animacy detection
+results are only presented for the classification of nouns or noun
+phrases, we will present these while furthermore reporting on the
+results for all words in a text.
+%bovenstaande zin loopt nog niet helemaal lekker%
 
 In real world applications, an animacy detection system will most
 likely be faced with completely new texts instead of single words. It
@@ -329,13 +396,12 @@ training and 20\% for testing on the word level, we run the risk of
 mixing training data with test data, thereby making it too easy for a
 system to rely on words it has seen from the same
 text. \cite{bowman:12} fall into this trap by making a random split in
-their data on the sentence level. It is very likely that in their
-setup sentences from the same document are present in both the
-training data and the test data, making their evaluation
-unrealistic. To circumvent this problem, we split the data at the
-story level. We make use of 10-fold cross-validation, where we
-randomly select 10\% of the stories for testing and train on the
-remaining 90\%.
+their data on the sentence level. In such a setup, it is highly likely
+that sentences from the same document are present in both the training
+data and the test data, making their evaluation unrealistic. To
+circumvent this problem, we split the data at the story level. We make
+use of 10-fold cross-validation, where we randomly select 10\% of the
+stories for testing and train on the remaining 90\%.
 
 \subsection{Features}
 
@@ -344,27 +410,27 @@ including lexical features, morphological features, syntactic features
 and semantic features.
 
 \subsubsection{Lexical features}
-We take a sliding window approach where for each focus word (i.e.\ the
+We take a sliding window approach where for each focus word (i.e. the
 word for which we want to predict whether it is animate or not) we
-extract $n$ words to the left, $n$ words to the right and the focus
-word itself. In all experiments we set $n$ to 3. In addition to the
-word forms, for each word in a window we extract its lemma.
+extract both $n$ words to the left and $n$ words to the right, as well
+as the focus word itself. In all experiments we set $n$ to 3. In
+addition to the word forms, for each word in a window we also extract
+its lemma.
 
 \subsubsection{Morphological Features}
 For each word we extract its part-of-speech tag. For reasons of
 comparability we choose to use the tags as provided by the output of
 the syntactic parser Alpino, instead of a more specialized
 part-of-speech tagger. Again, we take a sliding window approach and
-extract the part-of-speech tags for three words left and right of the focus word, as well as the tag of the focus word itself.
-
+extract the part-of-speech tags for three words left and right of the
+focus word, as well as the tag of the focus word itself.
+%waarom Alpino voor comparibility, omdat we dat ook gebruikten in het taggen van het corpus?%
 \subsubsection{Syntactic Features}
-We extract the dependency tag for each word and its $n$ neighbors to
+We extract the dependency tag for each word and its $n=3$ neighbors to
 the right and to the left as provided by the syntactic parser
 Alpino. Animate entities tend to take the position of subject or
 object in a sentence which is why this feature is expected and has
 proven to perform rather well.
-
-%is n hier weer 3? Je specificeert dat niet%
 
 \subsubsection{Semantic Features} The most innovative feature we have
 included in our model is concerned with semantic similarity. In his
@@ -377,13 +443,13 @@ idea. The idea is very simple, yet powerful: words that often
 co-appear with the same set of words, will have a more similar
 meaning. Recently, there has been a lot of interest in procedures that
 can automatically induce so-called `word embeddings' from large,
-unannotated collections of texts. These models typically attempt to
-learn a lower dimensional vector for each word in the vocabulary which
-captures the typical co-occurrence patterns of the word in the
+unannotated collections of texts
+(e.g.~\cite{mikolov:13,pennington:14}). These models typically attempt
+to learn a lower dimensional vector for each word in the vocabulary
+which captures the typical co-occurrence patterns of the word in the
 corpus. The similarity between words can then be approximated by
-applying arithmetics to these vectors of word embeddings.
-
-%je moet een of meerdere bronnen noemen hier, by "recently there has been interest"%
+applying similarity metrics, such as the cosine metric, to these
+vectors of word embeddings.
 
 We have trained word embeddings with 300 dimensions using the popular
 skip-gram architecture \cite{mikolov:13} on the Dutch corpus of COW
@@ -407,11 +473,6 @@ example, the 5 nearest neighbors of \textit{Assepoester}
 \textit{stripboek} (`comic') (0.713), \textit{kortverhaal} (`short
 story') (0.709), \textit{jeugdboek} (`youth book') (0.706).
 
-We add the word embedding vectors to our animacy model as follows. We
-augment each word in the data with its corresponding 300 dimension
-word embeddings vector. Out-of-vocabulary words were given a vector in
-which all dimensions are set to zero.
-
 
 \subsection{Models}
 We employ a Maximum Entropy classifier with L2 regularization as
@@ -424,27 +485,41 @@ words, Part-of-Speech tags and lemmata, (4) words, Part-of-Speech
 tags, lemmata and dependency tags, (5) word embeddings and (6-9) the
 features in model 1 to 4 plus word embeddings.
 
+Although our background corpus is sufficiently large to cover most
+words in an unseen text, there will always be rare words for which we
+do not have learned word embeddings. Therefore, in order to
+effectively make use of the word embedding vectors, we need a way to
+deal with out-of-vocabulary items. We adopt a simple strategy were we
+make use of a primary classifier and a back-off classifier. For models
+6 to 9, we augment each word with its corresponding 300 dimension word
+embeddings vector. In the case of out-of-vocabulary words, we resort
+to a back-off model that contains all features except the word
+embeddings. For example, a model that makes use of words and word
+embeddings, will make a prediction on the basis of the word features
+alone. In case of the model that solely uses the embeddings (model 5),
+the back-off classifier is represented by a majority vote classifier,
+which classifies unseen words as inanimate.
 
 \section{Results}\label{sec:results}
 
 In Table \ref{tab:results-all} we present the results for all nine
 models on the complete data set. For each model we report the
 precision, recall, $F1$-score and Area Under the Precision-Recall
-Curve (AUC) for the animate words and the
+Curve (AUC_{PR}) for the animate words and the
 inanimate words.
 
 \begin{table}
 \centering
 \begin{tabular}{llrrrr}
 \toprule
-features & class & precision &  recall & $F1$ &  AUC \\
+features & class & Precision &  Recall & $F1$ &  AUC_{PR} \\
 \midrule
 \multirow{2}{*}{embeddings}                            & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
-                                                       & animate     &       0.92 &    0.89 &    0.90 &  \\
+                                                       & animate     &       0.93 &    0.89 &    0.91 &  \\
 \multirow{2}{*}{word}                                  & inanimate     &       0.96 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
                                                        & animate     &       0.94 &    0.78 &    0.85 &  \\
 \multirow{2}{*}{word + embeddings}                     & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.93 &    0.90 &    0.91 &  \\
+                                                       & animate     &       0.94 &    0.90 &    0.91 &  \\
 \multirow{2}{*}{word + PoS}                            & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.95} \\
                                                        & animate     &       0.94 &    0.86 &    0.89 &  \\
 \rowcolor{Gray}                                        & inanimate     &       0.98 &    0.99 &    0.99 &  \\
@@ -459,7 +534,7 @@ features & class & precision &  recall & $F1$ &  AUC \\
                                                        & animate     &       0.94 &    0.92 &    0.93 &  \\
 \bottomrule
 \end{tabular}
-\caption{Precision, recall, $F1$ and Area Under the Curve (AUC) scores for animate and inanimate classes per feature setting for all words.}
+\caption{Precision, Recall, $F1$-score and Area Under the Precision Recall Curve (AUC_{PR}) scores for animate and inanimate classes per feature setting for all words.}
 \label{tab:results-all}
 \end{table}
 
@@ -485,50 +560,73 @@ the word embeddings with the context sensitive features, such as word
 $n$-grams or Part-of-Speech tags, outperform the context insensitive
 model.
 
-The best performance is
-achieved by the model that combines the word features, part-of-speech
-tags and the word embeddings with an $F1$-score of 0.93 for animate
-words and 0.99 on inanimate words. Adding more features does not
-result in any more performance gain.
-
+The best performance is achieved by the model that combines the word
+features, part-of-speech tags and the word embeddings, which has an
+$F1$-score of 0.93 on animate words and 0.99 on inanimate
+words. Adding more features does not result in any more performance
+gain.
+%misschien hier dan nog een voorbeeld noemen, of verwijzen naar relevant cijfer in de tabel%
 Table \ref{tab:results-noun} presents the results for all nouns and
 names in the data set. The best performance is again achieved by the
-model that combines the word features with the Part-of-Speech tags and
+model that combines the word features with the part-of-speech tags and
 word embeddings, resulting in an $F1$-score of 0.92 for animate
-instances and 0.94 for inanimate instances.
+instances and 0.95 for inanimate instances.
 
 
 \begin{table}
 \centering
 \begin{tabular}{llrrrr}
 \toprule
-features & class &  precision &  recall & $F1$ &  AUC \\
+features & class &  Precision &  Recall & $F1$ &  AUC_{PR} \\
 \midrule
-\multirow{2}{*}{embeddings}                            & inanimate     &       0.89 &    0.94 &    0.92 & \multirow{2}{*}{0.92} \\
-                                                       & animate       &       0.92 &    0.84 &    0.88 &  \\
+\multirow{2}{*}{embeddings}                            & inanimate     &       0.90 &    0.96 &    0.92 & \multirow{2}{*}{0.91} \\
+                                                       & animate       &       0.93 &    0.85 &    0.89 &  \\
 \multirow{2}{*}{word}                                  & inanimate     &       0.78 &    0.98 &    0.87 & \multirow{2}{*}{0.91} \\
                                                        & animate       &       0.96 &    0.60 &    0.74 &  \\
-\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.90 &    0.96 &    0.93 & \multirow{2}{*}{0.96} \\
-                                                       & animate       &       0.94 &    0.86 &    0.89 &  \\
-\multirow{2}{*}{word + pos}                            & inanimate     &       0.86 &    0.96 &    0.90 & \multirow{2}{*}{0.94} \\
+\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.90 &    0.97 &    0.93 & \multirow{2}{*}{0.96} \\
+                                                       & animate       &       0.95 &    0.85 &    0.90 &  \\
+\multirow{2}{*}{word + PoS}                            & inanimate     &       0.86 &    0.96 &    0.90 & \multirow{2}{*}{0.94} \\
                                                        & animate       &       0.93 &    0.78 &    0.84 &  \\
-\rowcolor{Gray}                                        & inanimate     &       0.93 &    0.96 &    0.94 &  \\
-\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & animate       &       0.94 &    0.89 &    0.92 &\multirow{-2}{*}{0.97}  \\
+\rowcolor{Gray}                                        & inanimate     &       0.93 &    0.96 &    0.95 &  \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & animate       &       0.95 &    0.90 &    0.92 &\multirow{-2}{*}{0.97}  \\
 \multirow{2}{*}{word + PoS + lemma}                    & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
                                                        & animate       &       0.94 &    0.80 &    0.86 &  \\
-\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.92 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
-                                                       & animate       &       0.94 &    0.89 &    0.92 &  \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.93 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
+                                                       & animate       &       0.95 &    0.89 &    0.92 &  \\
 \multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
                                                        & animate       &       0.93 &    0.80 &    0.86 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.93 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
-                                                       & animate       &       0.94 &    0.89 &    0.92 &  \\
+\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.93 &    0.96 &    0.95 & \multirow{2}{*}{0.97} \\
+                                                       & animate       &       0.95 &    0.90 &    0.92 &  \\
 \bottomrule
 \end{tabular}
-\caption{Precision, recall, $F1$ and Area Under the Curve (AUC) scores for animate and inanimate classes
+\caption{Precision, Recall, $F1$ score and Area Under the Precision Recall Curve (AUC_{PR}) scores for animate and inanimate classes
   per feature settings for all words tagged as noun.}
 \label{tab:results-noun}
 \end{table}
 
+
+\section{Animacy Detection in the Wild}
+
+In a classical evaluation setup -- as with our approach -- general
+practice is to divide an annotated data set into a set for training a
+computational system of which the performance is evaluated on a
+held-out test set. Even if we include a separate development set, this
+setup always runs the risk over overfitting the data. Our annotated
+corpus contains a reasonably diverse set of stories, yet it is fairly
+small and stylistically homogeneous. Even though we performed a
+cross-validation experiment, the chances of overfitting are
+considerably high. In this section we investigate how well our animacy
+detection model performs on a collection of unannotated texts.
+
+The Dutch Folktale Database\footnote{\url{http://www.verhalenbank.nl}}
+is a collection of about 42,000 folktales~\cite{meder:10}. The
+collection contains stories from various genres (e.g.~fairytales,
+legends, urban legends, jokes, personal narratives) in a number of
+variants of Dutch and in Frisian. Every entry in the database contains
+meta-data about the story, including language, collector, place and
+date of narration, keywords, names, and subgenre. We make use of a
+subcollection of the Dutch Folktale Database which comprises 16253
+stories written in standard Dutch.
 
 \section{Concluding Remarks}
 
@@ -552,7 +650,6 @@ heavily on linguistic features, it is important that additional
 features, such as animacy, are not dependent on these features as
 well. Our linguistically uninformed model for animacy detection
 provides such a module.
-
 
 
 \subparagraph*{Acknowledgments}
