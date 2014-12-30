@@ -18,7 +18,7 @@ from sklearn.preprocessing import LabelEncoder
 from gensim.models.word2vec import Word2Vec
 
 
-def load_data(filename, limit=None, binary=True):
+def load_data(filename, limit=None, binary=True, lowercase=False):
     X, y = [[]], [[]]
     animacy_specification = dict(
         [line.strip().split('\t') for line in codecs.open("animate-specification.txt", encoding='utf-8')])
@@ -31,7 +31,8 @@ def load_data(filename, limit=None, binary=True):
                 y.append([])
             else:
                 fields = line.strip().split('\t')
-                X[-1].append([field if field else None for field in fields[:-2]])
+                lower = lambda w: w.lower() if lowercase else w
+                X[-1].append([lower(field) if field else None for field in fields[:-2]])
                 assert X[-1]
                 if not binary:
                     if fields[-2] == 'yes':
@@ -190,7 +191,9 @@ def include_features(X, features):
 if __name__ == '__main__':
 
     # read the data and extract all features
-    X, y = load_data(sys.argv[2], limit=None, binary=True if sys.argv[4] != 'full' else False)
+    X, y = load_data(sys.argv[2], limit=None,
+                     binary=True if sys.argv[4] != 'full' else False,
+                     lowercase=True if sys.argv[5] == 'lower' else False)
     scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     noun_scores = pd.DataFrame(
@@ -257,8 +260,8 @@ if __name__ == '__main__':
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]](class_weight='auto', C=1.0, random_state=1)
-            backoff_clf = classifiers[sys.argv[3]](class_weight='auto', C=1.0, random_state=1)
+            clf = classifiers[sys.argv[3]](class_weight='auto', C=5.0, random_state=1)
+            backoff_clf = classifiers[sys.argv[3]](class_weight='auto', C=5.0, random_state=1)
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -282,10 +285,11 @@ if __name__ == '__main__':
                 for i, word in enumerate(X_test):
                     if test_words[i].lower() not in model:
                         print "Default prediction for", test_words[i]
-                        preds.append(0)
                         if sys.argv[4] == 'full':
+                            preds.append(2)
                             pred_probs.append(np.array([0.0, 0.0, 1.0]))
                         else:
+                            preds.append(0)
                             pred_probs.append(np.array([1.0, 0.0]))
                     else:
                         preds.append(clf.predict(word)[0])
@@ -299,10 +303,18 @@ if __name__ == '__main__':
             p, r, f, _ = precision_recall_fscore_support(y_test, preds)
             #ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
             ap = 0
-            scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-            scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
             if sys.argv[4] == 'full':
-                scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+                if p.shape[0] == 3:
+                    scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                    scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+                else:
+                    scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
+                    scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            else:
+                scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
             print classification_report(y_test, preds)
             print "Classification report on nouns:"
             noun_preds = []
@@ -317,10 +329,18 @@ if __name__ == '__main__':
                 y_test[noun_preds], preds[noun_preds])
             #ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
             ap = 0
-            noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-            noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
             if sys.argv[4] == 'full':
-                noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+                if p.shape[0] == 3:
+                    noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                    noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+                else:
+                    noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
+                    noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            else:
+                noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
             ambiguous_preds = []
             i = 0
             for idx in test_index:
@@ -334,10 +354,18 @@ if __name__ == '__main__':
                 y_test[ambiguous_preds], preds[ambiguous_preds])
             # ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
             ap = 0
-            ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-            ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
-            if sys.argv[4] == "full":
-                ambiguous_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+            if sys.argv[4] == 'full':
+                if p.shape[0] == 3:
+                    ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                    ambiguous_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
+                else:
+                    ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
+                    ambiguous_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            else:
+                ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
             if sys.argv[4] == 'full':
                 n_experiments += 3
             else:
