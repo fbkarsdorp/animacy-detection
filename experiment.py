@@ -283,7 +283,10 @@ if __name__ == '__main__':
                     if test_words[i].lower() not in model:
                         print "Default prediction for", test_words[i]
                         preds.append(0)
-                        pred_probs.append(np.array([1.0, 0.0]))
+                        if sys.argv[4] == 'full':
+                            pred_probs.append(np.array([0.0, 0.0, 1.0]))
+                        else:
+                            pred_probs.append(np.array([1.0, 0.0]))
                     else:
                         preds.append(clf.predict(word)[0])
                         pred_probs.append(clf.predict_proba(word)[0])
