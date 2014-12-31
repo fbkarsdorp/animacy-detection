@@ -355,10 +355,7 @@ if __name__ == '__main__':
             print classification_report(y_test[ambiguous_preds], preds[ambiguous_preds])
             p, r, f, s = precision_recall_fscore_support(
                 y_test[ambiguous_preds], preds[ambiguous_preds])
-            if sys.argv[4] != "full":
-                ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
-            else:
-                ap = 0
+            ap = 0
             for label_i, label in enumerate(sorted(set(y_test[ambiguous_preds]))):
                 ambiguous_scores.loc[ambiguous_scores.shape[0]] = np.array(
                     [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
