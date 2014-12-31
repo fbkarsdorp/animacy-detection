@@ -180,8 +180,8 @@ class FeatureStacker(BaseEstimator):
 
 FIELDNAMES = ['word', 'root', 'lcat', 'pos','rel', 'sense', 'frame',
               'special','noun_det', 'noun_countable', 'noun_number',
-              'verb_auxiliary', 'verb_tense', 'verb_complements','animate',
-              'reference']
+              'verb_auxiliary', 'verb_tense', 'verb_complements', 'cluster',
+              'animate', 'reference']
 
 def include_features(X, features):
     header = {w: i for i, w in enumerate(FIELDNAMES)}
@@ -209,9 +209,12 @@ if __name__ == '__main__':
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
                    ('word', 'pos', 'root', 'rel')] # tuple(FIELDNAMES)
+    experiments = experiments + [experiment + ('cluster', )
+                                 for experiment in experiments]
     experiments = experiments + [experiment + ('embeddings', )
                                  for experiment in experiments]
     experiments += [('embeddings', )]
+    experiments += [('cluster', )]
 
     classifiers = {
         'lr': LogisticRegression,
