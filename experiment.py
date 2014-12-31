@@ -201,7 +201,7 @@ if __name__ == '__main__':
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
-    model = Word2Vec.load(sys.argv[1])
+    model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
     model.init_sims(replace=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
@@ -214,7 +214,12 @@ if __name__ == '__main__':
         'lr': LogisticRegression,
         'sgd': SGDClassifier,
         'svm': LinearSVC,
-        'knn': KNeighborsClassifier(weights='distance')
+    }
+
+    parameters = {
+        'lr': {'C': 1.0, 'random_state': 1, 'dual': True},
+        'sgd': {'loss': 'log', 'shuffle': True, 'n_iter': 50, 'random_state': 1},
+        'svm': {'C': 1.0, 'random_state': 1}
     }
 
     #ambiguous_words = set(line.strip() for line in codecs.open(
@@ -267,8 +272,8 @@ if __name__ == '__main__':
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]](dual=True, C=1.0, random_state=1)
-            backoff_clf = classifiers[sys.argv[3]](dual=True, C=1.0, random_state=1)
+            clf = classifiers[sys.argv[3]](**parameters[sys.argv[3]])
+            backoff_clf = classifiers[sys.argv[3]](**parameters[sys.argv[3]])
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -308,24 +313,15 @@ if __name__ == '__main__':
                 pred_probs = clf.predict_proba(X_test)
 
             p, r, f, s = precision_recall_fscore_support(y_test, preds)
-            print confusion_matrix(y_test, preds)
-            #ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
-            ap = 0
-            if sys.argv[4] == 'full':
-                if p.shape[0] == 3:
-                    scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    if s[1] == 0:
-                        scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 1, 1, 1, ap])
-                    scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
-                    scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
-                else:
-                    scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
-                    scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            if sys.argv[4] != "full":
+                ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
             else:
-                scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                ap = 0
+            for label_i, label in enumerate(sorted(set(y_test))):
+                scores.loc[scores.shape[0]] = np.array(
+                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
             print classification_report(y_test, preds)
+
             print "Classification report on nouns:"
             noun_preds = []
             i = 0
@@ -337,23 +333,14 @@ if __name__ == '__main__':
             print classification_report(y_test[noun_preds], preds[noun_preds])
             p, r, f, s = precision_recall_fscore_support(
                 y_test[noun_preds], preds[noun_preds])
-            #ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
-            ap = 0
-            if sys.argv[4] == 'full':
-                if p.shape[0] == 3:
-                    noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    if s[1] == 0:
-                        noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 1, 1, 1, ap])
-                    else:
-                        noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
-                    noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
-                else:
-                    noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
-                    noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            if sys.argv[4] != "full":
+                ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
             else:
-                noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                ap = 0
+            for label_i, label in enumerate(sorted(set(y_test[noun_preds]))):
+                noun_scores.loc[noun_scores.shape[0]] = np.array(
+                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
+
             ambiguous_preds = []
             i = 0
             for idx in test_index:
@@ -365,28 +352,10 @@ if __name__ == '__main__':
             print classification_report(y_test[ambiguous_preds], preds[ambiguous_preds])
             p, r, f, s = precision_recall_fscore_support(
                 y_test[ambiguous_preds], preds[ambiguous_preds])
-            # ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
-            ap = 0
-            if sys.argv[4] == 'full':
-                if p.shape[0] == 3:
-                    ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
-                    ambiguous_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
-                else:
-                    ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 0.0, 0.0, 0.0, ap])
-                    ambiguous_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[1], r[1], f[1], ap])
+            if sys.argv[4] != "full":
+                ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
             else:
-                ambiguous_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                ambiguous_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
-            if sys.argv[4] == 'full':
-                n_experiments += 3
-            else:
-                n_experiments += 2
-
-        # print "Fitting a majority vote DummyClassifier"
-        # dummy_clf = DummyClassifier(strategy='constant', constant=1)
-        # dummy_clf.fit(X_train, y_train)
-        # preds = dummy_clf.predict(X_test)
-        # print "Classification report for Dummy Classifier:"
-        # print classification_report(y_test, preds)
+                ap = 0
+            for label_i, label in enumerate(sorted(set(y_test[ambiguous_preds]))):
+                ambiguous_scores.loc[ambiguous_scores.shape[0]] = np.array(
+                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
