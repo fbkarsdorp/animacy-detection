@@ -13,6 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report, average_precision_score
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 
 from gensim.models.word2vec import Word2Vec
@@ -201,6 +202,7 @@ if __name__ == '__main__':
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     model = Word2Vec.load(sys.argv[1])
+    model.init_sims(replace=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
                    ('word', 'pos', 'root', 'rel')] # tuple(FIELDNAMES)
@@ -210,13 +212,18 @@ if __name__ == '__main__':
 
     classifiers = {
         'lr': LogisticRegression,
-        'sgd': SGDClassifier(n_iter=100, shuffle=True),
-        'svm': LinearSVC(),
+        'sgd': SGDClassifier,
+        'svm': LinearSVC,
         'knn': KNeighborsClassifier(weights='distance')
     }
 
-    ambiguous_words = set(line.strip() for line in codecs.open(
-        'data/ambiguous.txt', encoding='utf-8'))
+    #ambiguous_words = set(line.strip() for line in codecs.open(
+    #    'data/ambiguous.txt', encoding='utf-8'))
+    ambiguous_words = set()
+    for line in codecs.open("animate-specification.txt", encoding='utf-8'):
+        word, label = line.strip().split('\t')
+        if label == "inan-anim":
+            ambiguous_words.add(word)
 
     n_experiments = 0
     for k, (train_index, test_index) in enumerate(KFold(
@@ -260,8 +267,8 @@ if __name__ == '__main__':
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]](class_weight='auto', C=5.0, random_state=1)
-            backoff_clf = classifiers[sys.argv[3]](class_weight='auto', C=5.0, random_state=1)
+            clf = classifiers[sys.argv[3]](dual=True, C=1.0, random_state=1)
+            backoff_clf = classifiers[sys.argv[3]](dual=True, C=1.0, random_state=1)
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -300,12 +307,15 @@ if __name__ == '__main__':
                 preds = clf.predict(X_test)
                 pred_probs = clf.predict_proba(X_test)
 
-            p, r, f, _ = precision_recall_fscore_support(y_test, preds)
+            p, r, f, s = precision_recall_fscore_support(y_test, preds)
+            print confusion_matrix(y_test, preds)
             #ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
             ap = 0
             if sys.argv[4] == 'full':
                 if p.shape[0] == 3:
                     scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
+                    if s[1] == 0:
+                        scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 1, 1, 1, ap])
                     scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
                     scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
                 else:
@@ -325,14 +335,17 @@ if __name__ == '__main__':
                         noun_preds.append(i + j)
                 i += len(X[idx])
             print classification_report(y_test[noun_preds], preds[noun_preds])
-            p, r, f, _ = precision_recall_fscore_support(
+            p, r, f, s = precision_recall_fscore_support(
                 y_test[noun_preds], preds[noun_preds])
             #ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
             ap = 0
             if sys.argv[4] == 'full':
                 if p.shape[0] == 3:
                     noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
-                    noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
+                    if s[1] == 0:
+                        noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, 1, 1, 1, ap])
+                    else:
+                        noun_scores.loc[n_experiments+1] = np.array([exp_name, k, 1, p[1], r[1], f[1], ap])
                     noun_scores.loc[n_experiments+2] = np.array([exp_name, k, 2, p[2], r[2], f[2], ap])
                 else:
                     noun_scores.loc[n_experiments] = np.array([exp_name, k, 0, p[0], r[0], f[0], ap])
@@ -350,7 +363,7 @@ if __name__ == '__main__':
                 i += len(X[idx])
             print "Classification report on ambigous words:"
             print classification_report(y_test[ambiguous_preds], preds[ambiguous_preds])
-            p, r, f, _ = precision_recall_fscore_support(
+            p, r, f, s = precision_recall_fscore_support(
                 y_test[ambiguous_preds], preds[ambiguous_preds])
             # ap = average_precision_score(y_test[ambiguous_preds], pred_probs[ambiguous_preds][:,1])
             ap = 0
