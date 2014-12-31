@@ -201,7 +201,10 @@ if __name__ == '__main__':
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
-    model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+    if sys.argv[6] == 'w2v':
+        model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
+    else:
+        model = Word2Vec.load(sys.argv[1])
     model.init_sims(replace=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
