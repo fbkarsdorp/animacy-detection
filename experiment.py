@@ -324,8 +324,12 @@ if __name__ == '__main__':
             else:
                 ap = 0
             for label_i, label in enumerate(sorted(set(y_test))):
-                scores.loc[scores.shape[0]] = np.array(
-                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
+                if s[label_i] == 0:
+                    scores.loc[scores.shape[0]] = np.array(
+                        [exp_name, k, label, 1.0, 1.0, 1.0, ap])
+                else:
+                    scores.loc[scores.shape[0]] = np.array(
+                        [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
             print classification_report(y_test, preds)
 
             print "Classification report on nouns:"
@@ -344,8 +348,12 @@ if __name__ == '__main__':
             else:
                 ap = 0
             for label_i, label in enumerate(sorted(set(y_test[noun_preds]))):
-                noun_scores.loc[noun_scores.shape[0]] = np.array(
-                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
+                if s[label_i] == 0:
+                    noun_scores.loc[noun_scores.shape[0]] = np.array(
+                        [exp_name, k, label, 1.0, 1.0, 1.0, ap])
+                else:
+                    noun_scores.loc[noun_scores.shape[0]] = np.array(
+                        [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
 
             ambiguous_preds = []
             i = 0
@@ -360,5 +368,9 @@ if __name__ == '__main__':
                 y_test[ambiguous_preds], preds[ambiguous_preds])
             ap = 0
             for label_i, label in enumerate(sorted(set(y_test[ambiguous_preds]))):
-                ambiguous_scores.loc[ambiguous_scores.shape[0]] = np.array(
-                    [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
+                if s[label_i] == 0:
+                    ambiguous_scores.loc[ambiguous_scores.shape[0]] = np.array(
+                        [exp_name, k, label, 1.0, 1.0, 1.0, ap])
+                else:
+                    ambiguous_scores.loc[ambiguous_scores.shape[0]] = np.array(
+                        [exp_name, k, label, p[label_i], r[label_i], f[label_i], ap])
