@@ -1,6 +1,5 @@
 import codecs
-import sys
-
+import ConfigParser
 import numpy as np
 import scipy.sparse as sp
 import pandas as pd
@@ -15,6 +14,8 @@ from sklearn.metrics import classification_report, average_precision_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+
 
 from gensim.models.word2vec import Word2Vec
 
@@ -191,24 +192,26 @@ def include_features(X, features):
 
 if __name__ == '__main__':
 
+    config = ConfigParser.ConfigParser()
+    config.read("config.cfg")
     # read the data and extract all features
-    X, y = load_data(sys.argv[2], limit=None,
-                     binary=True if sys.argv[4] != 'full' else False,
-                     lowercase=True if sys.argv[5] == 'lower' else False)
+    X, y = load_data(config.get("data", "annotation"), limit=None,
+                     binary=config.getboolean("features", "binary-labels"),
+                     lowercase=config.getboolean("features", "lowercase"))
     scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     noun_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
     ambiguous_scores = pd.DataFrame(
         columns=['experiment', 'fold', 'class', 'precision', 'recall', 'Fscore', 'AUC'])
-    if sys.argv[6] == 'w2v':
-        model = Word2Vec.load_word2vec_format(sys.argv[1], binary=True)
-    else:
-        model = Word2Vec.load(sys.argv[1])
+    if config.get("data", "model-type") == 'word2vec':
+        model = Word2Vec.load_word2vec_format(config.get("data", "embeddings"), binary=True)
+    elif config.get("data", "model-type") == "gensim":
+        model = Word2Vec.load(config.get("data", "embeddings"))
     model.init_sims(replace=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
-                   ('word', 'pos', 'root', 'rel')] # tuple(FIELDNAMES)
+                   ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
     experiments = experiments + [experiment + ('cluster', )
                                  for experiment in experiments]
     experiments = experiments + [experiment + ('embeddings', )
@@ -216,16 +219,36 @@ if __name__ == '__main__':
     experiments += [('embeddings', )]
     experiments += [('cluster', )]
 
+    if config.get("features", "feature-model") != "all":
+        experiments = [experiments[config.getint("features", "feature-model")]]
+
     classifiers = {
-        'lr': LogisticRegression,
+        'logistic-regression': LogisticRegression,
         'sgd': SGDClassifier,
         'svm': LinearSVC,
     }
 
+    classweight = config.get("classifier", "class-weight")
+    random_state = config.getint("classifier", "random-state")
     parameters = {
-        'lr': {'C': 1.0, 'random_state': 1, 'dual': True},
-        'sgd': {'loss': 'log', 'shuffle': True, 'n_iter': 50, 'random_state': 1},
-        'svm': {'C': 1.0, 'random_state': 1}
+
+        'logistic-regression': {'C': config.getfloat("classifier", "C"),
+               'random_state': random_state,
+               'dual': config.getboolean("classifier", "dual"),
+               'class_weight': None if classweight != 'auto' else classweight,
+               'penalty': config.get('classifier', 'penalty')},
+
+        'sgd': {'loss': config.get("classifier", "loss"),
+                'shuffle': config.getboolean("classifier", "shuffle"),
+                'n_iter': config.getint("classifier", "sgd-iterations"),
+                'penalty': config.get("classifier", "penalty"),
+                'random_state': random_state,
+                'class_weight': None if classweight != 'auto' else classweight},
+
+        'svm': {'C': config.getfloat("classifier", "C"),
+                'class_weight': None if classweight != 'auto' else classweight,
+                'random_state': random_state,
+                'penalty': config.get('classifier', 'penalty')}
     }
 
     #ambiguous_words = set(line.strip() for line in codecs.open(
@@ -238,7 +261,8 @@ if __name__ == '__main__':
 
     n_experiments = 0
     for k, (train_index, test_index) in enumerate(KFold(
-            len(X), n_folds=10, shuffle=True, random_state=1)):
+            len(X), n_folds=config.getint("evaluation", "n-folds"),
+            shuffle=True, random_state=1)):
         # get the actual data by flattening the documents
         X_train_docs = [X[i] for i in train_index]
         y_train_docs = [label for i in train_index for label in y[i]]
@@ -251,8 +275,9 @@ if __name__ == '__main__':
             print "Features: %s" % ', '.join(experiment)
             exp_name = '_'.join(experiment)
             if 'embeddings' in experiment and len(experiment) > 1:
-                features = FeatureStacker(('windower', Windower(window_size=3)),
-                                          ('embeddings', WordEmbeddings(model)))
+                features = FeatureStacker(
+                    ('windower', Windower(window_size=config.getint("features", "window-size"))),
+                    ('embeddings', WordEmbeddings(model)))
                 backoff_features = Windower(window_size=3)
                 backoff = True
             elif 'embeddings' in experiment:
@@ -263,8 +288,14 @@ if __name__ == '__main__':
 
             X_train = include_features(X_train_docs, experiment)
             X_test = include_features(X_test_docs, experiment)
+
             X_train = features.fit_transform(X_train)
             X_test = features.transform(X_test)
+
+            if config.getboolean("features", "scale"):
+                scaler = StandardScaler(with_mean=False)
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
 
             if backoff:
                 X_train_backoff = include_features(
@@ -273,13 +304,21 @@ if __name__ == '__main__':
                 X_test_backoff = include_features(
                     X_test_docs, [f for f in experiment if f != 'embeddings'])
                 X_test_backoff = backoff_features.transform(X_test_backoff)
+                if config.getboolean("features", "scale"):
+                    scaler = StandardScaler(with_mean=False)
+                    X_train_backoff = scaler.fit_transform(X_train_backoff)
+                    X_test_backoff = scaler.transform(X_test_backoff)
 
             le = LabelEncoder()
             y_train = le.fit_transform(y_train_docs)
             y_test = le.transform(y_test_docs)
             # initialize a classifier
-            clf = classifiers[sys.argv[3]](**parameters[sys.argv[3]])
-            backoff_clf = classifiers[sys.argv[3]](**parameters[sys.argv[3]])
+            classifier = config.get("classifier", "classifier")
+            clf = classifiers[classifier](**parameters[classifier])
+            backoff_clf = classifiers[classifier](**parameters[classifier])
+            if classifier != 'logistic-regression':
+                clf.predict_proba = clf.decision_function
+                backoff_clf.predict_proba = backoff_clf.decision_function
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -303,7 +342,7 @@ if __name__ == '__main__':
                 for i, word in enumerate(X_test):
                     if test_words[i].lower() not in model:
                         print "Default prediction for", test_words[i]
-                        if sys.argv[4] == 'full':
+                        if not config.getboolean("features", "binary-labels"):
                             preds.append(2)
                             pred_probs.append(np.array([0.0, 0.0, 1.0]))
                         else:
@@ -319,7 +358,7 @@ if __name__ == '__main__':
                 pred_probs = clf.predict_proba(X_test)
 
             p, r, f, s = precision_recall_fscore_support(y_test, preds)
-            if sys.argv[4] != "full":
+            if not config.getboolean("features", "binary-labels"):
                 ap = average_precision_score(y_test, pred_probs[:,1], average="micro")
             else:
                 ap = 0
@@ -343,7 +382,7 @@ if __name__ == '__main__':
             print classification_report(y_test[noun_preds], preds[noun_preds])
             p, r, f, s = precision_recall_fscore_support(
                 y_test[noun_preds], preds[noun_preds])
-            if sys.argv[4] != "full":
+            if not config.getboolean("features", "binary-labels"):
                 ap = average_precision_score(y_test[noun_preds], pred_probs[noun_preds][:,1])
             else:
                 ap = 0
