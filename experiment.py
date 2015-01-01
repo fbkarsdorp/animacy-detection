@@ -274,17 +274,18 @@ if __name__ == '__main__':
             backoff = False
             print "Features: %s" % ', '.join(experiment)
             exp_name = '_'.join(experiment)
+            window_size = config.getint("features", "window-size"))
             if 'embeddings' in experiment and len(experiment) > 1:
                 features = FeatureStacker(
-                    ('windower', Windower(window_size=config.getint("features", "window-size"))),
+                    ('windower', Windower(window_size=window_size),
                     ('embeddings', WordEmbeddings(model)))
-                backoff_features = Windower(window_size=3)
+                backoff_features = Windower(window_size=window_size))
                 backoff = True
             elif 'embeddings' in experiment:
                 features = WordEmbeddings(model)
                 experiment = ('word', ) + experiment # needed to extract the vectors
             else:
-                features = Windower(window_size=3)
+                features = Windower(window_size=window_size)
 
             X_train = include_features(X_train_docs, experiment)
             X_test = include_features(X_test_docs, experiment)
@@ -292,7 +293,7 @@ if __name__ == '__main__':
             X_train = features.fit_transform(X_train)
             X_test = features.transform(X_test)
 
-            if config.getboolean("features", "scale"):
+            if config.getboolean("features", "scale") and backoff:
                 scaler = MinMaxScaler(copy=False)
                 X_train = scaler.fit_transform(X_train.toarray())
                 X_test = scaler.transform(X_test.toarray())
@@ -304,7 +305,7 @@ if __name__ == '__main__':
                 X_test_backoff = include_features(
                     X_test_docs, [f for f in experiment if f != 'embeddings'])
                 X_test_backoff = backoff_features.transform(X_test_backoff)
-                if config.getboolean("features", "scale"):
+                if config.getboolean("features", "scale") and backoff:
                     scaler = MinMaxScaler(copy=False)
                     X_train_backoff = scaler.fit_transform(X_train_backoff.toarray())
                     X_test_backoff = scaler.transform(X_test_backoff.toarray())
