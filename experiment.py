@@ -305,10 +305,6 @@ if __name__ == '__main__':
                 X_test_backoff = include_features(
                     X_test_docs, [f for f in experiment if f != 'embeddings'])
                 X_test_backoff = backoff_features.transform(X_test_backoff)
-                if config.getboolean("features", "scale") and backoff:
-                    scaler = MinMaxScaler(copy=False)
-                    X_train_backoff = scaler.fit_transform(X_train_backoff.toarray())
-                    X_test_backoff = scaler.transform(X_test_backoff.toarray())
 
             le = LabelEncoder()
             y_train = le.fit_transform(y_train_docs)
