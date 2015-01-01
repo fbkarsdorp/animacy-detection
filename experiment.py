@@ -274,7 +274,7 @@ if __name__ == '__main__':
             backoff = False
             print "Features: %s" % ', '.join(experiment)
             exp_name = '_'.join(experiment)
-            window_size = config.getint("features", "window-size"))
+            window_size = config.getint("features", "window-size")
             if 'embeddings' in experiment and len(experiment) > 1:
                 features = FeatureStacker(
                     ('windower', Windower(window_size=window_size),
