@@ -277,8 +277,8 @@ if __name__ == '__main__':
             window_size = config.getint("features", "window-size")
             if 'embeddings' in experiment and len(experiment) > 1:
                 features = FeatureStacker(
-                    ('windower', Windower(window_size=window_size),
-                    ('embeddings', WordEmbeddings(model))))
+                    ('windower', Windower(window_size=window_size)),
+                    ('embeddings', WordEmbeddings(model)))
                 backoff_features = Windower(window_size=window_size)
                 backoff = True
             elif 'embeddings' in experiment:
