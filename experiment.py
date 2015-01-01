@@ -14,7 +14,7 @@ from sklearn.metrics import classification_report, average_precision_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 
 
 from gensim.models.word2vec import Word2Vec
@@ -293,9 +293,9 @@ if __name__ == '__main__':
             X_test = features.transform(X_test)
 
             if config.getboolean("features", "scale"):
-                scaler = StandardScaler(with_mean=False)
-                X_train = scaler.fit_transform(X_train)
-                X_test = scaler.transform(X_test)
+                scaler = MinMaxScaler(copy=False)
+                X_train = scaler.fit_transform(X_train.toarray())
+                X_test = scaler.transform(X_test.toarray())
 
             if backoff:
                 X_train_backoff = include_features(
@@ -305,9 +305,9 @@ if __name__ == '__main__':
                     X_test_docs, [f for f in experiment if f != 'embeddings'])
                 X_test_backoff = backoff_features.transform(X_test_backoff)
                 if config.getboolean("features", "scale"):
-                    scaler = StandardScaler(with_mean=False)
-                    X_train_backoff = scaler.fit_transform(X_train_backoff)
-                    X_test_backoff = scaler.transform(X_test_backoff)
+                    scaler = MinMaxScaler(copy=False)
+                    X_train_backoff = scaler.fit_transform(X_train_backoff.toarray())
+                    X_test_backoff = scaler.transform(X_test_backoff.toarray())
 
             le = LabelEncoder()
             y_train = le.fit_transform(y_train_docs)
