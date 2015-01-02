@@ -296,6 +296,7 @@ if __name__ == '__main__':
             ambiguous_words.add(word)
 
     n_experiments = 0
+    scale = config.getboolean("features", "scale")
     for k, (train_index, test_index) in enumerate(KFold(
             len(X), n_folds=config.getint("evaluation", "n-folds"),
             shuffle=True, random_state=random_state)):
