@@ -298,7 +298,7 @@ if __name__ == '__main__':
     n_experiments = 0
     for k, (train_index, test_index) in enumerate(KFold(
             len(X), n_folds=config.getint("evaluation", "n-folds"),
-            shuffle=True, random_state=1)):
+            shuffle=True, random_state=random_state)):
         # get the actual data by flattening the documents
         X_train_docs = [X[i] for i in train_index]
         y_train_docs = [label for i in train_index for label in y[i]]
