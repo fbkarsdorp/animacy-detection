@@ -9,7 +9,8 @@ from sklearn.cross_validation import KFold
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import classification_report, average_precision_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import confusion_matrix
@@ -18,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 from gensim.models.word2vec import Word2Vec
-
+from gensim.matutils import unitvec
 
 def load_data(filename, limit=None, binary=True, lowercase=False):
     X, y = [[]], [[]]
@@ -138,6 +139,30 @@ class WordEmbeddings(BaseEstimator):
         return self.transform(X)
 
 
+class WordContextEmbeddings(BaseEstimator):
+    def __init__(self, model, window_size=3):
+        self.model = model
+        self.window_size = window_size
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X_ = []
+        for d, doc in enumerate(X):
+            for i, word in enumerate(doc):
+                X_.append([doc[j][0].lower() for j in range(
+                    i - self.window_size, i + self.window_size) if j >= 0 and j < len(doc)])
+        return np.vstack([
+            unitvec(np.array([self.model[w] if w in self.model else np.zeros(self.model.layer1_size)
+                              for w in window]).mean(axis=0))
+            for window in X_])
+
+    def fit_transform(self, X, y=None):
+        self.fit(X, y)
+        return self.transform(X)
+
+
 class FeatureStacker(BaseEstimator):
     """Stacks several transformer objects to yield concatenated features.
     Similar to pipeline, a list of tuples ``(name, estimator)`` is passed
@@ -218,6 +243,9 @@ if __name__ == '__main__':
                                  for experiment in experiments]
     experiments += [('embeddings', )]
     experiments += [('cluster', )]
+    experiments = experiments + [experiment + ('context-embeddings',)
+                                 for experiment in experiments]
+    experiments += [('context-embeddings', )]
 
     if config.get("features", "feature-model") != "all":
         experiments = [experiments[config.getint("features", "feature-model")]]
@@ -225,7 +253,7 @@ if __name__ == '__main__':
     classifiers = {
         'logistic-regression': LogisticRegression,
         'sgd': SGDClassifier,
-        'svm': LinearSVC,
+        'svm': SVC,
     }
 
     classweight = config.get("classifier", "class-weight")
@@ -246,9 +274,10 @@ if __name__ == '__main__':
                 'class_weight': None if classweight != 'auto' else classweight},
 
         'svm': {'C': config.getfloat("classifier", "C"),
+                'kernel': config.get("classifier", "kernel"),
                 'class_weight': None if classweight != 'auto' else classweight,
-                'random_state': random_state,
-                'penalty': config.get('classifier', 'penalty')}
+                'random_state': random_state
+                }
     }
 
     #ambiguous_words = set(line.strip() for line in codecs.open(
@@ -275,15 +304,45 @@ if __name__ == '__main__':
             print "Features: %s" % ', '.join(experiment)
             exp_name = '_'.join(experiment)
             window_size = config.getint("features", "window-size")
-            if 'embeddings' in experiment and len(experiment) > 1:
+            if ('embeddings' in experiment and len(experiment) > 1
+                and not 'context-embeddings' in experiment):
                 features = FeatureStacker(
                     ('windower', Windower(window_size=window_size)),
                     ('embeddings', WordEmbeddings(model)))
                 backoff_features = Windower(window_size=window_size)
                 backoff = True
-            elif 'embeddings' in experiment:
+                if 'word' not in experiment:
+                    experiment = ('word', ) + experiment # needed to extract the vectors
+            elif ('embeddings' in experiment and len(experiment) > 2
+                and 'context-embeddings' in experiment):
+                features = FeatureStacker(
+                    ('windower', Windower(window_size=window_size)),
+                    ('embeddings', WordEmbeddings(model)),
+                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                backoff_features = Windower(window_size=window_size)
+                backoff = True
+                if "word" not in experiment:
+                    experiment = ('word', ) + experiment # needed to extract the vectors
+            elif ('embeddings' in experiment and 'context-embeddings' in experiment):
+                features = FeatureStacker(
+                    ('embeddings', WordEmbeddings(model)),
+                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                experiment = ('word', ) + experiment # needed to extract the vectors
+            elif experiment == ('embeddings', ):
                 features = WordEmbeddings(model)
                 experiment = ('word', ) + experiment # needed to extract the vectors
+            elif ('context-embeddings' in experiment and len(experiment) > 1
+                  and not 'embeddings' in experiment):
+                features = FeatureStacker(
+                    ('windower', Windower(window_size=window_size)),
+                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                backoff_features = Windower(window_size=window_size)
+                backoff = True
+                if "word" not in experiment:
+                    experiment = ('word', ) + experiment # needed to extract the vectors
+            elif experiment == ('context-embeddings', ):
+                features = WordContextEmbeddings(model, window_size)
+                experiment = ('word', ) + experiment
             else:
                 features = Windower(window_size=window_size)
 
@@ -313,9 +372,12 @@ if __name__ == '__main__':
             classifier = config.get("classifier", "classifier")
             clf = classifiers[classifier](**parameters[classifier])
             backoff_clf = classifiers[classifier](**parameters[classifier])
-            if classifier != 'logistic-regression':
-                clf.predict_proba = clf.decision_function
-                backoff_clf.predict_proba = backoff_clf.decision_function
+            if (classifier != 'logistic-regression' and config.get("classifier", "loss") != 'log'):
+                predict_proba = clf.decision_function
+                backoff_predict_proba = backoff_clf.decision_function
+            else:
+                predict_proba = clf.predict_proba
+                backoff_predict_proba = backoff_clf.predict_proba
             print clf.__class__.__name__
             clf.fit(X_train, y_train)
             if backoff:
@@ -327,14 +389,14 @@ if __name__ == '__main__':
                     if test_words[i].lower() not in model:
                         print "Backoff prediction for", test_words[i]
                         preds.append(backoff_clf.predict(X_test_backoff[i])[0])
-                        pred_probs.append(backoff_clf.predict_proba(X_test_backoff[i]))
+                        pred_probs.append(backoff_predict_proba(X_test_backoff[i]))
                     else:
                         preds.append(clf.predict(X_test[i])[0])
-                        pred_probs.append(clf.predict_proba(X_test[i])[0])
+                        pred_probs.append(predict_proba(X_test[i])[0])
                 preds = np.array(preds)
                 pred_probs = np.vstack(pred_probs)
 
-            elif exp_name == "embeddings":
+            elif exp_name in ("embeddings", "context-embeddings", "embeddings_context-embeddings"):
                 preds, pred_probs = [], []
                 for i, word in enumerate(X_test):
                     if test_words[i].lower() not in model:
@@ -347,12 +409,12 @@ if __name__ == '__main__':
                             pred_probs.append(np.array([1.0, 0.0]))
                     else:
                         preds.append(clf.predict(word)[0])
-                        pred_probs.append(clf.predict_proba(word)[0])
+                        pred_probs.append(predict_proba(word)[0])
                 preds = np.array(preds)
                 pred_probs = np.vstack(pred_probs)
             else:
                 preds = clf.predict(X_test)
-                pred_probs = clf.predict_proba(X_test)
+                pred_probs = predict_proba(X_test)
 
             p, r, f, s = precision_recall_fscore_support(y_test, preds)
             if not config.getboolean("features", "binary-labels"):
