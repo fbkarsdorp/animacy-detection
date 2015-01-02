@@ -243,16 +243,16 @@ if __name__ == '__main__':
     model.init_sims(replace=True)
     # set up a number of experimental settings
     experiments = [('word',), ('word', 'pos'), ('word', 'pos', 'root'),
-                   ('word', 'pos', 'root', 'rel'), tuple(FIELDNAMES)]
-    experiments = experiments + [experiment + ('cluster', )
-                                 for experiment in experiments]
+                   ('word', 'pos', 'root', 'rel')]
+    #experiments = experiments + [experiment + ('cluster', )
+    #                             for experiment in experiments]
     experiments = experiments + [experiment + ('embeddings', )
                                  for experiment in experiments]
     experiments += [('embeddings', )]
-    experiments += [('cluster', )]
-    experiments = experiments + [experiment + ('context-embeddings',)
-                                 for experiment in experiments]
-    experiments += [('context-embeddings', )]
+    #experiments += [('cluster', )]
+    #experiments = experiments + [experiment + ('context-embeddings',)
+    #                             for experiment in experiments]
+    #experiments += [('context-embeddings', )]
 
     if config.get("features", "feature-model") != "all":
         experiments = [experiments[config.getint("features", "feature-model")]]
