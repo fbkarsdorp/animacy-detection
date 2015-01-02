@@ -6,6 +6,7 @@ import pandas as pd
 
 from sklearn.base import BaseEstimator
 from sklearn.cross_validation import KFold
+from sklearn.decomposition import KernelPCA
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -123,8 +124,9 @@ class Windower(BaseEstimator):
 
 
 class WordEmbeddings(BaseEstimator):
-    def __init__(self, model):
+    def __init__(self, model, scale=False):
         self.model = model
+        self.scale = scale
 
     def fit(self, X, y=None):
         return self
@@ -136,13 +138,16 @@ class WordEmbeddings(BaseEstimator):
 
     def fit_transform(self, X, y=None):
         self.fit(X, y)
+        if self.scale:
+            return MinMaxScaler().fit_transform(self.transform(X))
         return self.transform(X)
 
 
 class WordContextEmbeddings(BaseEstimator):
-    def __init__(self, model, window_size=3):
+    def __init__(self, model, window_size=3, scale=False):
         self.model = model
         self.window_size = window_size
+        self.scale = scale
 
     def fit(self, X, y=None):
         return self
@@ -160,6 +165,8 @@ class WordContextEmbeddings(BaseEstimator):
 
     def fit_transform(self, X, y=None):
         self.fit(X, y)
+        if self.scale:
+            return MinMaxScaler().fit_transform(self.transform(X))
         return self.transform(X)
 
 
@@ -308,7 +315,7 @@ if __name__ == '__main__':
                 and not 'context-embeddings' in experiment):
                 features = FeatureStacker(
                     ('windower', Windower(window_size=window_size)),
-                    ('embeddings', WordEmbeddings(model)))
+                    ('embeddings', WordEmbeddings(model, scale=scale)))
                 backoff_features = Windower(window_size=window_size)
                 backoff = True
                 if 'word' not in experiment:
@@ -317,31 +324,31 @@ if __name__ == '__main__':
                 and 'context-embeddings' in experiment):
                 features = FeatureStacker(
                     ('windower', Windower(window_size=window_size)),
-                    ('embeddings', WordEmbeddings(model)),
-                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                    ('embeddings', WordEmbeddings(model, scale=scale)),
+                    ('context-embeddings', WordContextEmbeddings(model, window_size, scale=scale)))
                 backoff_features = Windower(window_size=window_size)
                 backoff = True
                 if "word" not in experiment:
                     experiment = ('word', ) + experiment # needed to extract the vectors
             elif ('embeddings' in experiment and 'context-embeddings' in experiment):
                 features = FeatureStacker(
-                    ('embeddings', WordEmbeddings(model)),
-                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                    ('embeddings', WordEmbeddings(model, scale=scale)),
+                    ('context-embeddings', WordContextEmbeddings(model, window_size, scale=scale)))
                 experiment = ('word', ) + experiment # needed to extract the vectors
             elif experiment == ('embeddings', ):
-                features = WordEmbeddings(model)
+                features = WordEmbeddings(model, scale=scale)
                 experiment = ('word', ) + experiment # needed to extract the vectors
             elif ('context-embeddings' in experiment and len(experiment) > 1
                   and not 'embeddings' in experiment):
                 features = FeatureStacker(
                     ('windower', Windower(window_size=window_size)),
-                    ('context-embeddings', WordContextEmbeddings(model, window_size)))
+                    ('context-embeddings', WordContextEmbeddings(model, window_size, scale=scale)))
                 backoff_features = Windower(window_size=window_size)
                 backoff = True
                 if "word" not in experiment:
                     experiment = ('word', ) + experiment # needed to extract the vectors
             elif experiment == ('context-embeddings', ):
-                features = WordContextEmbeddings(model, window_size)
+                features = WordContextEmbeddings(model, window_size, scale=scale)
                 experiment = ('word', ) + experiment
             else:
                 features = Windower(window_size=window_size)
@@ -351,11 +358,6 @@ if __name__ == '__main__':
 
             X_train = features.fit_transform(X_train)
             X_test = features.transform(X_test)
-
-            if config.getboolean("features", "scale") and backoff:
-                scaler = MinMaxScaler(copy=False)
-                X_train = scaler.fit_transform(X_train.toarray())
-                X_test = scaler.transform(X_test.toarray())
 
             if backoff:
                 X_train_backoff = include_features(
