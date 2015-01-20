@@ -2,7 +2,7 @@
 
 \usepackage{microtype, graphicx, booktabs, multirow, color, colortbl}
 
-\usepackage{gb4e}
+\usepackage{gb4e, rotating}
 \bibliographystyle{plain}
 
 \definecolor{Gray}{gray}{0.9}
@@ -15,7 +15,7 @@
 \author[4]{Antal van den Bosch}
 \affil[1]{Meertens Institute\\
   Amsterdam, The Netherlands\\
-  \texttt{folgert.karsdorp@meertens.knaw.nl}}
+  \texttt{fbkarsdorp@fastmail.nl}}
 \affil[2]{Meertens Institute\\
   Amsterdam, The Netherlands\\
   \texttt{marten.van.der.meulen@meertens.knaw.nl}}
@@ -56,13 +56,13 @@
   out of sync with current (psycho)linguistic research, which takes a
   more dynamic approach to animacy. This paper presents a
   linguistically uninformed computational model for animacy
-  classification. The model makes use of word $n$-grams in
+  classification. This model makes use of word $n$-grams in
   combinations with lower dimensional word embedding representations
   that were learned from a web-scale corpus. We compare the model to a
   number of linguistically informed models that use features such as
   dependency tags and show competitive results.
 \end{abstract}
-
+%aanpassen op basis van embedding verhalenbank-evaluatie%
 \section{Introduction}
 
 For almost all species in the world, the capacity to distinguish
@@ -78,18 +78,18 @@ some researchers, this provides evidence for the idea that the
 division between animate and inanimate is an innate part of how we see
 the world.
 
-Traditionally, even though animacy may be a scalar rather than a
+Although animacy may be a scalar rather than a
 strictly categorical distinction (see e.g. the animacy hierarchy in
 \cite{comrie:89} and research such as \cite{rosenbach:08}), the
-animate/inanimate distinction is taken as fixed with regard to lexical
-items. This standpoint has been challenged, however, by researchers
+animate/inanimate distinction is traditonally taken as fixed with regard to lexical
+items: something is either animate (e.g. a human) or not (e.g. a chair). This standpoint has been challenged, however, by researchers
 from different fields. Firstly, it has long been established in
 linguistic typology that not all languages award animacy to the same
-entities in different grammatical categories: as \cite{comrie:89} for
-example notes, English, and many other languages, distinguishes
+entities in different grammatical categories: as \cite{comrie:89} notes, for
+example, English, and many other languages, distinguishes
 between human and not-human in the choice of pronouns, whereas Russian
-distinguishes between animate, entailing humans and animals, versus
-non-animate, in their interrogative pronouns. This indicates different
+distinguishes between animate (entailing humans and animals) versus
+non-animate (entailing everything else) in its interrogative pronouns. This indicates different
 subdivisions of animacy in the respective languages. Secondly,
 philosophers such as Daniel Dennett support the view that animacy and
 aliveness are to be treated as epistemological stances rather than
@@ -98,7 +98,7 @@ capacity defines our stance towards objects \cite{dennett:96}. In
 other words, depending on whether people \textit{think} that an object
 is animate, they utilize different cognitive strategies to explain and
 predict the actions of those objects. Finally, evidence from
-psycholinguistic research has accumulated to support the view of
+psycholinguistic research has accumulated to support this view of
 animacy as a cognitive viewpoint rather than an extra-perceptive
 absolute. \cite{nieuwland:05} for example show that test subjects
 readily accept animate behavior from inanimate objects within the
@@ -106,7 +106,7 @@ proper contexts, and \cite{vogels:13} moreover emphasize the relation
 between animacy and motion, showing that factors such as
 self-propelment play a crucial role in recognizing and/or awarding
 animacy to certain objects. This is exemplified in the opening of this
-well-known story:
+well-known storyhttp://www.verhalenbank.nl/items/show/9636:
 
 \begin{quotation} {\it A farmer bought a pancake on the market. Once
     he got home, the farmer was hungry and began to bake the
@@ -158,13 +158,12 @@ away with features that require syntactic parsing or semantic lexicons
 while still yielding competitive performance. We focus on labeling
 animacy in stories because stories pose some interesting problems to
 automatic systems of animacy recognition. As the example of the
-fleeing pancake already made clear, quite some entities in stories,
-though inanimate in the `real' world, exhibit all behavioral
-capacities to consider them animate and rational agents. Another
+fleeing pancake already made clear, in stories quite some entities can exhibit all behavioral
+capacities to consider them animate and rational agents, even though they are inanimate in the `real' world. Another
 example is the \textit{Sorcerer's Apprentice} sequence in Walt
 Disney's famous \textit{Fantasia}, in which brooms display the ability
 to collect buckets of water. Such examples, in which otherwise as
-inanimatedly labeled entities such as pancakes and brooms act, make a
+inanimatedly labeled entities such as pancakes and brooms act as animate beings, make a
 clear case for developing dynamic, data driven systems that do not
 rely too much on static and fixed world knowledge, but rather on
 immediate context.
@@ -176,8 +175,8 @@ papers (\S\ref{sec:previous-work}). After a description of the corpus
 used in our study and how the annotations of the corpus have been
 established (\S\ref{sec:data}), we will give an account of our
 computational models in Section \ref{sec:models}. We report on the
-empirical results in Section \ref{sec:results}. The last section
-offers our conclusions and possible directions for future research.
+empirical results in Section \ref{sec:results}. Next, we provide an evaluation on a larger dataset, while also showing a real world application of our animacy detection system \ref{sec:listing}.
+The last section offers our conclusions and possible directions for future research.
 
 
 \section{Previous Work}\label{sec:previous-work}
@@ -274,13 +273,14 @@ heavily on static and fixed world knowledge.
 
 \section{The Data, Annotation and Preprocessing}\label{sec:data}
 
-To develop this dynamic, data driven system we used a corpus of Dutch
-folktales. One of the reasons to use folk tales was that, as
+To develop this dynamic, data driven system we use a corpus of Dutch
+folktales. One of the reasons to use folk tales is that, as
 \cite{vogels:13} note, `In cartoons or fairy tales [\ldots] inanimate
 entities or animals are often anthropomorphized', which means that the
 material could yield interesting cases of unexpected animacy, as is
-the case with the pancake in the abovementioned story. Our corpus
-consists of 74 Dutch stories from the collection
+the case with the pancake in the abovementioned story. 
+
+Our initial corpus consists of 74 Dutch stories from the collection
 \textit{Volkssprookjes uit Nederland en Vlaanderen}, compiled by
 \cite{sinninghe:78}. The collection is made up of Dutch retellings of
 popular and widespread stories, including such tales as \textit{The
@@ -349,7 +349,7 @@ inanimate in some cases in our corpus. It is telling that of the
 animate tokens 4627 (40,1\%) were nouns, while only 6878 of the
 inanimate tokens (11 \%) are nouns. This shows that being a noun is
 already somewhat of an indication for animacy.
-
+%hoeveel woorden hebben we eigenlijk die dubbel voorkomen, zoals pannekoek en ei? Leuk om te melden%
 After tokenization with the tokenization module of the Python software
 package Pattern \cite{smedt:12} we fed all stories to the
 state of the art syntactic parser for Dutch, Alpino \cite{bouma:01}.
@@ -363,9 +363,7 @@ evaluation.\footnote{The data set and the code to perform the
   \url{https://fbkarsdorp.github.io/animacy-detection}}.
 
 \subsection{Task description}
-%misschien deze subsection invoegen in bovenstaande inleiding. FK, nee
-%ik vind dit altijd een erg prettige plaats (eventueel een
-%soortgelijke zin in de inleiding, maar hier mag-ie niet weg :-))
+
 We formulate the problem of animacy detection as a classification
 problem where the goal is to assign a label at word level, rather than
 at lemma level. This label indicates whether the word is classified as
@@ -377,15 +375,14 @@ Animate words are far outnumbered by inanimate words in our collection
 (see \S\ref{sec:data}). Reporting accuracy scores would therefore
 provide skewed results, strongly favoring the majority category. The
 relative rarity of animate words makes evaluation measures such as the
-well-known $F1$-score more appropriate. For all experiments we report
-on the precision, recall and $F1$-score~\cite{rijsbergen:79}. As a
+well-known $F1$-score more appropriate. For this reason, we report
+on the precision, recall and $F1$-score~\cite{rijsbergen:79} for all experiments. As a
 second measure of evaluation, we compute the Area Under the Precision
 Recall Curve (AUC_{PR}) which also takes into account possible class
 imbalance. Also, while in most of the literature on animacy detection
 results are only presented for the classification of nouns or noun
-phrases, we will present these while furthermore reporting on the
+phrases, we will, while reporting on nouns and noun phrases as well, additionally report on the
 results for all words in a text.
-%bovenstaande zin loopt nog niet helemaal lekker%
 
 In real world applications, an animacy detection system will most
 likely be faced with completely new texts instead of single words. It
@@ -432,11 +429,12 @@ Alpino. Animate entities tend to take the position of subject or
 object in a sentence which is why this feature is expected and has
 proven to perform rather well.
 
-\subsubsection{Semantic Features} The most innovative feature we have
+\subsubsection{Semantic Features} 
+The most innovative feature we have
 included in our model is concerned with semantic similarity. In his
 \textit{Philophische Untersuchungen} Wittgenstein already suggests
 that ``Die Bedeutung eines Wortes ist sein Gebrauch in der Sprache''
-(PI 43). The well-known insight in computational linguistics that the
+(PI 43). This is reflected by the well-known insight in computational linguistics that the
 meaning of words can be approximated by comparing the linguistic
 contexts in which words appear, is an implementation of this very
 idea. The idea is very simple, yet powerful: words that often
@@ -459,21 +457,31 @@ processed web corpora for English, Dutch, Spanish, French, Swedish and
 German \cite{schaefer:12}. The 2014 Dutch corpus contains 6.8 billion
 word tokens. The idea behind using the word embeddings is that
 similarities between animate words can be estimated by inspecting the
-context in which they occur. From this follows for example that the word
+context in which they occur. From this follows, for example, that the word
 embeddings of an animate word are more similar to those of other
-animate words, as opposed to the embeddings of inanimate words. To give an
-example, the 5 nearest neighbors of \textit{Assepoester}
-(`Cinderella') are: \textit{Sneeuwwitje} (`Snow White') (sim = 0.807),
-\textit{Roodkapje} (`Little Red Riding Hood') (sim = 0.747),
-\textit{Doornroosje} (`Sleeping Beauty') (sim = 0.715),
-\textit{Repelsteeltje} (`Rumpelstiltskin') (sim = 0.669) and
-\textit{Alladin} (0.645). In contrast, the 5 most similar words to
-\textit{boek} (`book') are: \textit{boekje} (`book-\textsc{dim}')
-(sim=0.8), \textit{kinderboek} (`children's book') (0.757),
-\textit{stripboek} (`comic') (0.713), \textit{kortverhaal} (`short
-story') (0.709), \textit{jeugdboek} (`youth book') (0.706).
+animate words, as opposed to the embeddings of inanimate words.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{pca.pdf}
+\caption{Two-dimensional PCA projection of the 300 dimensional word embedding
+vectors for a number of animate and inanimate words. The horizontal line
+illustrates the separabilty between the two classes in the first dimension.}
+\label{fig:pca}
+\end{figure}
 
+To give an illustration of this idea, in Figure \ref{fig:pca} we depict a
+two-dimensional Principle Component Analysis (PCA) projection of the 300 dimensional
+word embedding vectors for a number of typically animate and typically inanimate
+ words. The horizontal grey line in the plot illustrates the separability of
+ the animate and inanimate words in the first dimension of the PCA projection.
+ It is interesting to observe that the less animate entity \emph{ghost} is the
+ one closest to all other inanimate entities. Likewise, words such as \emph{castle},
+ \emph{house} or \emph{car} are often used in figurative language (metonomy),
+ for example to refer to the people owning or living in the castle. Perhaps this
+ ambiguous animacy position is reponsible for their position in the first dimension
+ close to real animate entities.
+%dit stukje hierboven kan nog iets worden uitgewerkt, eventueel met voorbeelden%
 \subsection{Models}
 We employ a Maximum Entropy classifier with L2 regularization as
 implemented in \cite{sklearn}. In all experiments, we set the
@@ -489,7 +497,7 @@ Although our background corpus is sufficiently large to cover most
 words in an unseen text, there will always be rare words for which we
 do not have learned word embeddings. Therefore, in order to
 effectively make use of the word embedding vectors, we need a way to
-deal with out-of-vocabulary items. We adopt a simple strategy were we
+deal with out-of-vocabulary items. We adopt a simple strategy where we
 make use of a primary classifier and a back-off classifier. For models
 6 to 9, we augment each word with its corresponding 300 dimension word
 embeddings vector. In the case of out-of-vocabulary words, we resort
@@ -507,34 +515,35 @@ models on the complete data set. For each model we report the
 precision, recall, $F1$-score and Area Under the Precision-Recall
 Curve (AUC_{PR}) for the animate words and the
 inanimate words.
-
+%AUC PR scores staan nu niet in de tabel, en worden schijnbaar niet gerapporteerd%
+%positie van de tabellen is niet optimaal%
 \begin{table}
 \centering
-\begin{tabular}{llrrrr}
+\begin{tabular}{llrrr}
 \toprule
-features & class & Precision &  Recall & $F1$ &  AUC_{PR} \\
+features & class & Precision &  Recall & $F1$\\
 \midrule
-\multirow{2}{*}{embeddings}                            & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
-                                                       & animate     &       0.93 &    0.89 &    0.91 &  \\
-\multirow{2}{*}{word}                                  & inanimate     &       0.96 &    0.99 &    0.98 & \multirow{2}{*}{0.93} \\
-                                                       & animate     &       0.94 &    0.78 &    0.85 &  \\
-\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.98 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.90 &    0.91 &  \\
-\multirow{2}{*}{word + PoS}                            & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.95} \\
-                                                       & animate     &       0.94 &    0.86 &    0.89 &  \\
-\rowcolor{Gray}                                        & inanimate     &       0.98 &    0.99 &    0.99 &  \\
-\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings}   & animate     &       0.94 &    0.91 &    0.93 & \multirow{-2}{*}{0.97} \\
-\multirow{2}{*}{word + PoS + lemma}                    & inanimate    &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.86 &    0.90 &  \\
-\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.98 &    0.99 &    0.99 & \multirow{2}{*}{0.97} \\
-                                                       & animate     &       0.94 &    0.91 &    0.93 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.97 &    0.99 &    0.98 & \multirow{2}{*}{0.96} \\
-                                                       & animate     &       0.94 &    0.86 &    0.90 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.98 &    0.99 &    0.99 & \multirow{2}{*}{0.97} \\
-                                                       & animate     &       0.94 &    0.92 &    0.93 &  \\
+\multirow{2}{*}{embeddings}                            & inanimate     &       0.98 &    0.99 &    0.98 \\
+                                                       & animate     &       0.93 &    0.89 &    0.91   \\
+\multirow{2}{*}{word}                                  & inanimate     &       0.96 &    0.99 &    0.98 \\
+                                                       & animate     &       0.94 &    0.78 &    0.85   \\
+\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.98 &    0.99 &    0.98 \\
+                                                       & animate     &       0.94 &    0.90 &    0.91   \\
+\multirow{2}{*}{word + PoS}                            & inanimate     &       0.97 &    0.99 &    0.98 \\
+                                                       & animate     &       0.94 &    0.86 &    0.89   \\
+\rowcolor{Gray}                                        & inanimate     &       0.98 &    0.99 &    0.99 \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings}   & animate     &       0.94 &    0.91 &    0.93 \\
+\multirow{2}{*}{word + PoS + lemma}                    & inanimate    &       0.97 &    0.99 &    0.98  \\
+                                                       & animate     &       0.94 &    0.86 &    0.90   \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.98 &    0.99 &    0.99 \\
+                                                       & animate     &       0.94 &    0.91 &    0.93   \\
+\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.97 &    0.99 &    0.98 \\
+                                                       & animate     &       0.94 &    0.86 &    0.90   \\
+\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.98 &    0.99 &    0.99 \\
+                                                       & animate     &       0.94 &    0.92 &    0.93   \\
 \bottomrule
 \end{tabular}
-\caption{Precision, Recall, $F1$-score and Area Under the Precision Recall Curve (AUC_{PR}) scores for animate and inanimate classes per feature setting for all words.}
+\caption{Precision, Recall and $F1$-score for animate and inanimate classes per feature setting for all words.}
 \label{tab:results-all}
 \end{table}
 
@@ -554,7 +563,7 @@ performing models. This is a context insensitive model that operates
 on the level of the vocabulary, which means that it will predict the
 same outcome for each token of a particular word type. The high
 precision and high recall show us that this model has acquired
-knowledge about which words \textit{typically} group with animate
+knowledge about which words \emph{typically} group with animate
 words and which with inanimate words. However, the models that combines
 the word embeddings with the context sensitive features, such as word
 $n$-grams or Part-of-Speech tags, outperform the context insensitive
@@ -571,62 +580,109 @@ names in the data set. The best performance is again achieved by the
 model that combines the word features with the part-of-speech tags and
 word embeddings, resulting in an $F1$-score of 0.92 for animate
 instances and 0.95 for inanimate instances.
-
+%moet in deze tabel ook AUC pr?%
 
 \begin{table}
 \centering
-\begin{tabular}{llrrrr}
+\begin{tabular}{llrrr}
 \toprule
-features & class &  Precision &  Recall & $F1$ &  AUC_{PR} \\
+features & class &  Precision &  Recall & $F1$ \\
 \midrule
-\multirow{2}{*}{embeddings}                            & inanimate     &       0.90 &    0.96 &    0.92 & \multirow{2}{*}{0.91} \\
-                                                       & animate       &       0.93 &    0.85 &    0.89 &  \\
-\multirow{2}{*}{word}                                  & inanimate     &       0.78 &    0.98 &    0.87 & \multirow{2}{*}{0.91} \\
-                                                       & animate       &       0.96 &    0.60 &    0.74 &  \\
-\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.90 &    0.97 &    0.93 & \multirow{2}{*}{0.96} \\
-                                                       & animate       &       0.95 &    0.85 &    0.90 &  \\
-\multirow{2}{*}{word + PoS}                            & inanimate     &       0.86 &    0.96 &    0.90 & \multirow{2}{*}{0.94} \\
-                                                       & animate       &       0.93 &    0.78 &    0.84 &  \\
-\rowcolor{Gray}                                        & inanimate     &       0.93 &    0.96 &    0.95 &  \\
-\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & animate       &       0.95 &    0.90 &    0.92 &\multirow{-2}{*}{0.97}  \\
-\multirow{2}{*}{word + PoS + lemma}                    & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
-                                                       & animate       &       0.94 &    0.80 &    0.86 &  \\
-\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.93 &    0.96 &    0.94 & \multirow{2}{*}{0.97} \\
-                                                       & animate       &       0.95 &    0.89 &    0.92 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.87 &    0.96 &    0.91 & \multirow{2}{*}{0.95} \\
-                                                       & animate       &       0.93 &    0.80 &    0.86 &  \\
-\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.93 &    0.96 &    0.95 & \multirow{2}{*}{0.97} \\
-                                                       & animate       &       0.95 &    0.90 &    0.92 &  \\
+\multirow{2}{*}{embeddings}                            & inanimate     &       0.90 &    0.96 &    0.92  \\
+                                                       & animate       &       0.93 &    0.85 &    0.89  \\
+\multirow{2}{*}{word}                                  & inanimate     &       0.78 &    0.98 &    0.87  \\
+                                                       & animate       &       0.96 &    0.60 &    0.74  \\
+\multirow{2}{*}{word + embeddings}                     & inanimate     &       0.90 &    0.97 &    0.93  \\
+                                                       & animate       &       0.95 &    0.85 &    0.90  \\
+\multirow{2}{*}{word + PoS}                            & inanimate     &       0.86 &    0.96 &    0.90  \\
+                                                       & animate       &       0.93 &    0.78 &    0.84  \\
+\rowcolor{Gray}                                        & inanimate     &       0.93 &    0.96 &    0.95  \\
+\rowcolor{Gray}\multirow{-2}{*}{word + PoS + embeddings} & animate       &       0.95 &    0.90 &    0.92\\
+\multirow{2}{*}{word + PoS + lemma}                    & inanimate     &       0.87 &    0.96 &    0.91  \\
+                                                       & animate       &       0.94 &    0.80 &    0.86  \\
+\multirow{2}{*}{word + PoS + lemma + embeddings}       & inanimate     &       0.93 &    0.96 &    0.94  \\
+                                                       & animate       &       0.95 &    0.89 &    0.92  \\
+\multirow{2}{*}{word + PoS + lemma + dep}              & inanimate     &       0.87 &    0.96 &    0.91  \\
+                                                       & animate       &       0.93 &    0.80 &    0.86  \\
+\multirow{2}{*}{word + PoS + lemma + dep + embeddings} & inanimate     &       0.93 &    0.96 &    0.95  \\
+                                                       & animate       &       0.95 &    0.90 &    0.92  \\
 \bottomrule
 \end{tabular}
-\caption{Precision, Recall, $F1$ score and Area Under the Precision Recall Curve (AUC_{PR}) scores for animate and inanimate classes
+\caption{Precision, Recall, and $F1$ score for animate and inanimate classes
   per feature settings for all words tagged as noun.}
 \label{tab:results-noun}
 \end{table}
 
 
-\section{Animacy Detection in the Wild}
+\section{Listing Characters in Stories}\label{sec:listing}
 
 In a classical evaluation setup -- as with our approach -- general
-practice is to divide an annotated data set into a set for training a
-computational system of which the performance is evaluated on a
-held-out test set. Even if we include a separate development set, this
-setup always runs the risk over overfitting the data. Our annotated
-corpus contains a reasonably diverse set of stories, yet it is fairly
-small and stylistically homogeneous. Even though we performed a
+practice is to train a computational system on a training data set of
+which the performance is evaluated on a held-out test set. Even if we
+include a separate development set, this setup could run the risk
+of overfitting the data. Our annotated corpus contains a reasonably
+diverse set of stories in terms of genre, yet it is fairly small and
+stylistically rather homogeneous. Even though we performed a
 cross-validation experiment, the chances of overfitting are
 considerably high. In this section we investigate how well our animacy
-detection model performs on a collection of unannotated texts.
-
-The Dutch Folktale Database\footnote{\url{http://www.verhalenbank.nl}}
-is a collection of about 42,000 folktales~\cite{meder:10}. The
-collection contains stories from various genres (e.g.~fairytales,
-legends, urban legends, jokes, personal narratives) in a number of
-variants of Dutch and in Frisian. Every entry in the database contains
+detection model performs on a large collection of unannotated texts.
+%ik zou misschien het stuk over evaluatie hier achteraan zetten: het is meer methodologie%
+\subsection{Data}
+For our evaluation we again make use of a collection of folk tales, consisting of a subsection of the Dutch Folktale Database\footnote{\url{http://www.verhalenbank.nl}}. The complete collection consists of about 42,000 folktales~\cite{meder:10}, and contains stories from various genres (e.g.~fairytales, legends, urban legends, jokes, personal narratives) in standard Dutch and Frisian, as well as a number of dialectal variants. Every entry in the database contains
 meta-data about the story, including language, collector, place and
-date of narration, keywords, names, and subgenre. We make use of a
-subcollection of the Dutch Folktale Database which comprises 16253
-stories written in standard Dutch.
+date of narration, keywords, names, and subgenre. For our paper we make use of a
+subcollection comprising 16294 stories written in standard Dutch. The distribution of genres in the subcollection is the following: urban legends ($n=2795$), legends
+($n=299$), jokes ($n=3986$), personal narratives ($n=693$), riddles
+($n=1626$), sagas ($n=6045$) and fairy tales ($n=832$). We evaluate a
+random sample of this subcollection ($n=212$) in which this genre
+distribution is taken into account.
+
+\subsection{Evaluation}
+Our definition of animacy allows us to utilize our animacy detection
+system to extract all characters from a story in a similar vain as
+\cite{karsdorp:12}. In a real application, the system labels each noun
+and name in a text for animacy. After removing duplicate words, this
+produces a set of words that comprises the cast of a story. Without
+golden standard annotations, however, we can only evaluate these
+character sets for precision and not for recall. An alternative
+approach is to produce a ranking of all words in a story where the
+goal is to allocate the highest ranks to animate entities. This allows
+us to evaluate the rankings using \emph{Average Precision} which
+computes the average over precision scores at increasing points of
+recall. Naturally, with this evaluation method, we still need to
+manually evaluate the rankings. By using a rank cutoff and evaluating
+a sample of all automatically annotated stories, we reduce the costly
+manual labor to a minimum. We order all nouns and names in a story
+using the output of the probabilistic decision function of the Maximum
+Entropy classifier. After removing duplicate words, this produces a
+final ranking. The rankings are evaluated using \emph{Average
+  Precision} with a rank cutoff at 50.
+
+\subsection{Results}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{precision-recall-curve}
+\caption{Precision-Recall Curves and Average Precision scores per
+genre.}
+\label{fig:prec-recall-curve}
+\end{figure}
+
+We present the results in Figure \ref{fig:prec-recall-curve} in which
+we show the Precision-Recall curve as well as the Average Precision
+score for each genre. The system performs well, especially on fairy
+tales (AP=0.97) and jokes (AP=0.94). The lowest performance is
+measured on riddles (AP=0.85). This lower score is mainly the result
+of the system's inability to position the word \emph{blondje}
+(`dumb blonde' with a pejorative connotation, which is prevalent in the so-called `dumb blonde jokes') high up the ranking. 
+
+%misschien nog verschillende scores benoemen?%
+%misschien ook nog iets zeggen over de karakter ranking? Of was dat juist het onderdeel dat we er niet meer in gingen betrekken?%
+\begin{sidewaysfigure}
+\includegraphics[width=\linewidth]{map}
+\caption{Visualization of characters in the Dutch Folktale Database based on their embeddings using t-SNE.}
+\label{fig:map}
+\end{sidewaysfigure}
 
 \section{Concluding Remarks}
 

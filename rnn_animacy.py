@@ -29,7 +29,7 @@ def minibatch(l, bs):
     '''
     out  = [l[:i] for i in xrange(1, min(bs,len(l)+1) )]
     out += [l[i-bs:i] for i in xrange(bs,len(l)+1) ]
-    assert len(l) == len(out)
+    assert len(l) == len(out) # 
     return out
 
 def contextwin(l, win):
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     embeddings = pretrained_embeddings.syn0
     de = embeddings.shape[0]
     vocab = pretrained_embeddings.vocab
-    learning_rate = 0.0627142536696559
+    learning_rate = float(sys.argv[7]) if len(sys.argv) == 8 else 0.0627142536696559
     verbose = 1 if sys.argv[5] == 'verbose' else 0
     bs = 9
     n_hidden = int(sys.argv[6])

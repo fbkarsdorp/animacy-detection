@@ -2,23 +2,28 @@
  "paper"
  (lambda ()
    (TeX-add-to-alist 'LaTeX-provided-class-options
-                     '(("article" "a4paper" "twocolumn" "11pt")))
+                     '(("oasics" "a4paper" "UKenglish")))
    (TeX-add-to-alist 'LaTeX-provided-package-options
                      '(("inputenc" "utf8")))
    (TeX-run-style-hooks
     "latex2e"
-    "article"
-    "art11"
+    "oasics"
+    "oasics10"
+    "microtype"
     "graphicx"
-    "covington"
-    "times"
     "booktabs"
     "multirow"
     "color"
     "colortbl"
+    "gb4e"
     "inputenc")
    (LaTeX-add-labels
+    "sec:previous-work"
+    "sec:data"
+    "sec:models"
+    "sec:results"
     "tab:results-all"
-    "tab:results-noun")
+    "tab:results-noun"
+    "fig:prec-recall-curve")
    (LaTeX-add-bibliographies)))
 

@@ -211,8 +211,8 @@ class FeatureStacker(BaseEstimator):
                     out['%s__%s' % (name, key)] = value
             return out
 
-FIELDNAMES = ['word', 'root', 'lcat', 'pos','rel', 'sense', 'frame',
-              'special','noun_det', 'noun_countable', 'noun_number',
+FIELDNAMES = ['word', 'root', 'lcat', 'pos', 'rel', 'sense', 'frame',
+              'special', 'noun_det', 'noun_countable', 'noun_number',
               'verb_auxiliary', 'verb_tense', 'verb_complements', 'cluster',
               'animate', 'reference']
 
